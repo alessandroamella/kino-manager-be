@@ -1,0 +1,1 @@
+python_codicefiscale==0.10.3

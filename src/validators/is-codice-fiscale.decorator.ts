@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   registerDecorator,
   ValidationOptions,
@@ -16,6 +15,7 @@ export class IsCodiceFiscaleConstraint implements ValidatorConstraintInterface {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async validate(value: any, args: ValidationArguments): Promise<boolean> {
     if (typeof value !== 'string') {
       return false;
@@ -23,41 +23,42 @@ export class IsCodiceFiscaleConstraint implements ValidatorConstraintInterface {
 
     try {
       return await this.validateWithPython(value);
-    } catch (error) {
-      console.error('Error validating Codice Fiscale:', error);
+    } catch {
       return false;
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   defaultMessage(args: ValidationArguments): string {
-    return 'Invalid Italian Fiscal Code (Codice Fiscale)';
+    return 'codiceFiscale must be a valid Italian fiscal code';
   }
 
   private validateWithPython(cf: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const pythonScript = `
-from codicefiscale import codicefiscale
-print(codicefiscale.is_valid("${cf}"))
-`;
+      const pythonProcess = spawn('python', [
+        '-m',
+        'codicefiscale',
+        'validate',
+        cf,
+      ]);
 
-      const pythonProcess = spawn('python', ['-c', pythonScript]);
       let output = '';
       let error = '';
 
       pythonProcess.stdout.on('data', (data) => {
-        this.logger.debug('CF Python stdout: ' + data.toString().trim());
+        this.logger.debug(data.toString());
         output += data.toString();
       });
 
       pythonProcess.stderr.on('data', (data) => {
-        this.logger.error('CF Python stderr: ' + data.toString().trim());
+        this.logger.error(data.toString());
         error += data.toString();
       });
 
       pythonProcess.on('close', (code) => {
         if (code === 0) {
           try {
-            const isValid = output.trim() === 'True';
+            const isValid = output.trim() === '✅';
             this.logger.debug(
               `Codice Fiscale ${cf} is ${isValid ? 'valid' : 'invalid'}`,
             );

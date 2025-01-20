@@ -1,9 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsDate,
   IsEmail,
   IsEnum,
   IsISO31661Alpha2,
+  IsDate,
   IsOptional,
   IsString,
   MaxLength,
@@ -76,14 +76,4 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsOptional()
   @IsEnum(VerificationMethod)
   verificationMethod: VerificationMethod | null;
-
-  @ApiProperty()
-  @Transform(({ value }) => new Date(value))
-  @IsDate()
-  createdAt: Date;
-
-  @ApiProperty()
-  @Transform(({ value }) => new Date(value))
-  @IsDate()
-  updatedAt: Date;
 }

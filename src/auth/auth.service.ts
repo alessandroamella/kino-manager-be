@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -7,10 +8,11 @@ import {
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { PrismaService } from 'prisma/prisma.service';
 import { Logger } from 'winston';
-import { LocalStrategyReturnDto } from './dto/local-strategy-return.dto';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { SignupDto } from './dto/signup.dto';
+import { LoginDto } from './dto/login.dto';
+import { AccessTokenDto } from './dto/access-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -20,13 +22,10 @@ export class AuthService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async validateUser({ email, password }: LocalStrategyReturnDto) {
+  async login({ email, password }: LoginDto): Promise<AccessTokenDto> {
     this.logger.debug(`Validating member with email: ${email}`);
 
-    const member = await this.prisma.member.findFirst({
-      where: { email },
-      select: { password: true },
-    });
+    const member = await this.prisma.member.findFirst({ where: { email } });
     if (!member) {
       throw new NotFoundException();
     }
@@ -36,22 +35,35 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    return member;
-  }
+    const payload = { userId: member.id, email: member.email };
 
-  async login(user: { email: string; userId: number }) {
-    const payload = { email: user.email, sub: user.userId };
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
 
   async signup(data: SignupDto) {
+    const exists = await this.prisma.member.findFirst({
+      where: {
+        OR: [
+          { email: data.email },
+          data.codiceFiscale && { codiceFiscale: data.codiceFiscale },
+          {
+            firstName: data.firstName,
+            lastName: data.lastName,
+          },
+        ],
+      },
+    });
+    if (exists) {
+      throw new ConflictException();
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 12);
     const { id, email } = await this.prisma.member.create({
       data: { ...data, password: hashedPassword },
     });
     this.logger.info(`Member ${id} with email: ${data.email} has been created`);
-    return this.login({ userId: id, email });
+    return this.login({ email, password: data.password });
   }
 }
