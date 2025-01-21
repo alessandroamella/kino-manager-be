@@ -12,7 +12,7 @@ import { IstatService } from './istat.service';
 export class IstatController {
   constructor(private readonly istatService: IstatService) {}
 
-  @Get('comuni')
+  @Get('comune')
   @ApiOperation({ summary: 'Get Italian Comuni' })
   @ApiOkResponse({ description: 'Comuni', type: [String] })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })

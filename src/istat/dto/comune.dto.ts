@@ -103,8 +103,3 @@ export class ComuneDto {
   })
   coordinate: CoordinateDto;
 }
-
-export class ComuniDto {
-  @ApiProperty({ type: [ComuneDto], description: 'List of municipalities' })
-  comuni: ComuneDto[];
-}

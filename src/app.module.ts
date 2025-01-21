@@ -13,8 +13,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { CacheModule } from '@nestjs/cache-manager';
 import { IstatModule } from './istat/istat.module';
 import KeyvRedis from '@keyv/redis';
-import { Keyv } from 'keyv';
-import { CacheableMemory } from 'cacheable';
+import Keyv from 'keyv';
 
 @Module({
   imports: [
@@ -54,16 +53,22 @@ import { CacheableMemory } from 'cacheable';
         }),
       ],
     }),
+
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => {
+        const store = new Keyv(
+          new KeyvRedis({
+            socket: {
+              host: 'localhost',
+              port: 6379,
+            },
+          }),
+        ) as any;
+
         return {
-          stores: [
-            new Keyv({
-              store: new CacheableMemory({ ttl: '7d', lruSize: 5000 }),
-            }),
-            new KeyvRedis('redis://localhost:6379'),
-          ],
+          store,
+          ttl: 60 * 60 * 1000, // 1 hour
         };
       },
     }),
