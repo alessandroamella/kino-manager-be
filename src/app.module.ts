@@ -10,6 +10,11 @@ import Joi from 'joi';
 import { colorize } from 'json-colorizer';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { CacheModule } from '@nestjs/cache-manager';
+import { IstatModule } from './istat/istat.module';
+import KeyvRedis from '@keyv/redis';
+import { Keyv } from 'keyv';
+import { CacheableMemory } from 'cacheable';
 
 @Module({
   imports: [
@@ -49,6 +54,19 @@ import { JwtModule } from '@nestjs/jwt';
         }),
       ],
     }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => {
+        return {
+          stores: [
+            new Keyv({
+              store: new CacheableMemory({ ttl: '7d', lruSize: 5000 }),
+            }),
+            new KeyvRedis('redis://localhost:6379'),
+          ],
+        };
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -68,6 +86,7 @@ import { JwtModule } from '@nestjs/jwt';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1y' },
     }),
+    IstatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
