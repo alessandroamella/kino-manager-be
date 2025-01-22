@@ -32,7 +32,7 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsString()
   @MinLength(1)
   @MaxLength(255)
-  @Transform(({ value }) => value.trim().toLowerCase())
+  @Transform(({ value }) => value.trim())
   password: string;
 
   @ApiProperty({ format: 'email' })
@@ -55,16 +55,16 @@ export class MemberDto extends BaseDocumentDto implements Member {
   birthCountry: string;
 
   @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  birthComune: string | null;
+
+  @ApiProperty()
   @Transform(({ value }) => new Date(value))
   @IsDate()
   birthDate: Date;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(2)
-  birthProvince: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

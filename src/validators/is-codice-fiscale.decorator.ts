@@ -3,7 +3,6 @@ import {
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  ValidationArguments,
 } from 'class-validator';
 import { spawn } from 'child_process';
 import { Logger } from 'winston';
@@ -15,8 +14,7 @@ export class IsCodiceFiscaleConstraint implements ValidatorConstraintInterface {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validate(value: any, args: ValidationArguments): Promise<boolean> {
+  async validate(value: any): Promise<boolean> {
     if (typeof value !== 'string') {
       return false;
     }
@@ -28,8 +26,7 @@ export class IsCodiceFiscaleConstraint implements ValidatorConstraintInterface {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  defaultMessage(args: ValidationArguments): string {
+  defaultMessage(): string {
     return 'codiceFiscale must be a valid Italian fiscal code';
   }
 

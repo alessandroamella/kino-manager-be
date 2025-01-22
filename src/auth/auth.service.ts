@@ -47,7 +47,7 @@ export class AuthService {
       where: {
         OR: [
           { email: data.email },
-          data.codiceFiscale && { codiceFiscale: data.codiceFiscale },
+          { codiceFiscale: data.codiceFiscale || null },
           {
             firstName: data.firstName,
             lastName: data.lastName,

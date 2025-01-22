@@ -26,7 +26,7 @@ model Member {
   password           String
   codiceFiscale      String? // null if birthCountry is not 'IT'
   birthDate          DateTime
-  birthProvince      String? // null if birthCountry is not 'IT'
+  birthComune        String? // null if birthCountry is not 'IT'
   birthCountry       String // alpha-2 code
   verificationMethod VerificationMethod? // null if not verified
   verificationDate   DateTime? // null if not verified

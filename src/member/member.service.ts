@@ -23,7 +23,7 @@ export class MemberService {
         password: false,
         codiceFiscale: true,
         birthDate: true,
-        birthProvince: true,
+        birthComune: true,
         birthCountry: true,
         verificationMethod: true,
         verificationDate: true,

@@ -14,6 +14,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { IstatModule } from './istat/istat.module';
 import KeyvRedis from '@keyv/redis';
 import Keyv from 'keyv';
+import { AcceptLanguageResolver, I18nModule } from 'nestjs-i18n';
+import path from 'path';
 
 @Module({
   imports: [
@@ -53,7 +55,13 @@ import Keyv from 'keyv';
         }),
       ],
     }),
-
+    I18nModule.forRoot({
+      fallbackLanguage: 'it',
+      loaderOptions: {
+        path: path.join(process.cwd(), '/resources/i18n/'),
+      },
+      resolvers: [AcceptLanguageResolver],
+    }),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => {
