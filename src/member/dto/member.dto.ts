@@ -7,7 +7,9 @@ import {
   IsOptional,
   IsString,
   MaxLength,
-  MinLength,
+  IsNotEmpty,
+  IsStrongPassword,
+  Length,
 } from 'class-validator';
 import { Member, VerificationMethod } from '@prisma/client';
 import { Transform } from 'class-transformer';
@@ -17,21 +19,26 @@ import { IsCodiceFiscale } from 'validators/is-codice-fiscale.decorator';
 export class MemberDto extends BaseDocumentDto implements Member {
   @ApiProperty()
   @IsString()
-  @MinLength(1)
+  @IsNotEmpty()
   @MaxLength(50)
   firstName: string;
 
   @ApiProperty()
   @IsString()
-  @MinLength(1)
+  @IsNotEmpty()
   @MaxLength(50)
   lastName: string;
 
   @ApiProperty()
   @IsString()
-  @MinLength(1)
-  @MaxLength(255)
-  @Transform(({ value }) => value.trim())
+  @IsNotEmpty()
+  @IsStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 0,
+  })
   password: string;
 
   @ApiProperty({ format: 'email' })
@@ -44,10 +51,17 @@ export class MemberDto extends BaseDocumentDto implements Member {
   })
   @IsOptional()
   @IsString()
-  @MinLength(16)
-  @MaxLength(16)
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
+  @Length(16, 16)
   @IsCodiceFiscale()
   codiceFiscale: string | null;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  address: string;
 
   @ApiProperty()
   @IsISO31661Alpha2()
@@ -56,7 +70,7 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  @MinLength(1)
+  @IsNotEmpty()
   @MaxLength(255)
   birthComune: string | null;
 

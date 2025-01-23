@@ -93,6 +93,7 @@ import { MailModule } from './mail/mail.module';
         HOST: Joi.string().default('localhost'),
         PORT: Joi.number().integer().default(5000),
         DATABASE_URL: Joi.string().required(),
+        DIRECT_URL: Joi.string().required(),
         NODE_ENV: Joi.string()
           .valid('development', 'staging', 'production')
           .default('development'),

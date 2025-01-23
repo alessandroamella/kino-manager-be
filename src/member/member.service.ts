@@ -25,6 +25,7 @@ export class MemberService {
         birthDate: true,
         birthComune: true,
         birthCountry: true,
+        address: true,
         verificationMethod: true,
         verificationDate: true,
         createdAt: true,
