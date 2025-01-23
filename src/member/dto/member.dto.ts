@@ -8,7 +8,6 @@ import {
   IsString,
   MaxLength,
   MinLength,
-  ValidateIf,
 } from 'class-validator';
 import { Member, VerificationMethod } from '@prisma/client';
 import { Transform } from 'class-transformer';
@@ -43,10 +42,10 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @ApiPropertyOptional({
     description: 'Codice Fiscale, can be null if birthCountry != IT',
   })
+  @IsOptional()
   @IsString()
   @MinLength(16)
   @MaxLength(16)
-  @ValidateIf((o) => o.birthCountry === 'IT')
   @IsCodiceFiscale()
   codiceFiscale: string | null;
 

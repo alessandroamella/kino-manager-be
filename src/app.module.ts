@@ -16,11 +16,18 @@ import KeyvRedis from '@keyv/redis';
 import Keyv from 'keyv';
 import { AcceptLanguageResolver, I18nModule } from 'nestjs-i18n';
 import path from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { MailService } from './mail/mail.service';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
     MemberModule,
     PrismaModule,
+    ServeStaticModule.forRoot({
+      rootPath: path.join(__dirname, '..', 'public'),
+      serveRoot: '/v1/static',
+    }),
     WinstonModule.forRoot({
       transports: [
         new winston.transports.Console({
@@ -91,6 +98,10 @@ import path from 'path';
           .default('development'),
         JWT_SECRET: Joi.string().required(),
         COOKIE_SECRET: Joi.string().required(),
+        MJ_APIKEY_PUBLIC: Joi.string().required(),
+        MJ_APIKEY_PRIVATE: Joi.string().required(),
+        MJ_FROM_EMAIL: Joi.string().email().required(),
+        MJ_FROM_NAME: Joi.string().required(),
       }),
     }),
     AuthModule,
@@ -100,8 +111,9 @@ import path from 'path';
       signOptions: { expiresIn: '1y' },
     }),
     IstatModule,
+    MailModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, MailService],
 })
 export class AppModule {}

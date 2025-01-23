@@ -13,12 +13,18 @@ import { JwtService } from '@nestjs/jwt';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { AccessTokenDto } from './dto/access-token.dto';
+import { MailService } from 'mail/mail.service';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private jwtService: JwtService,
+    private readonly mailService: MailService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -64,6 +70,19 @@ export class AuthService {
       data: { ...data, password: hashedPassword },
     });
     this.logger.info(`Member ${id} with email: ${data.email} has been created`);
+
+    this.mailService.sendEmail(
+      email,
+      'Benvuto al Kinó Café',
+      await readFile(join(process.cwd(), 'emails/new-account.ejs'), {
+        encoding: 'utf-8',
+      }),
+      {
+        firstName: data.firstName,
+        createdAt: format(new Date(), 'dd MMM yyyy', { locale: it }),
+      },
+    );
+
     return this.login({ email, password: data.password });
   }
 }
