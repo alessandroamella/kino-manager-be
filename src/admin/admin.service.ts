@@ -191,7 +191,9 @@ export class AdminService {
       throw new NotFoundException('User not found');
     }
     const newMembershipCard =
-      data.membershipCardNumber && !existing.membershipCardNumber;
+      data.membershipCardNumber && !existing.membershipCardNumber
+        ? data.membershipCardNumber
+        : null;
     if (newMembershipCard) {
       const card = await this.prisma.membershipCard.findUnique({
         where: { number: data.membershipCardNumber },
@@ -209,6 +211,9 @@ export class AdminService {
         throw new BadRequestException('Card already assigned to another user');
       }
 
+      this.logger.info(
+        `Assigning membership card ${data.membershipCardNumber} to user with ID ${id}`,
+      );
       // this means the card is new and can be assigned and user is verified
       data.verificationDate = new Date();
       data.verificationMethod = VerificationMethod.MANUAL;
@@ -222,9 +227,7 @@ export class AdminService {
       where: { id },
       data: {
         ...data,
-        membershipCardNumber: newMembershipCard
-          ? data.membershipCardNumber
-          : undefined,
+        membershipCardNumber: newMembershipCard || undefined,
       },
       select: memberSelect,
     });
