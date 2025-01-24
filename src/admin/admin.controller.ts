@@ -4,6 +4,8 @@ import {
   Res,
   UseGuards,
   StreamableFile,
+  Patch,
+  Body,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
@@ -17,6 +19,8 @@ import {
 import { Response } from 'express';
 import { AdminGuard } from 'auth/admin.guard';
 import { MemberDataDto } from 'member/dto/member-data.dto';
+import { MembershipCardDto } from './dto/MembershipCard.dto';
+import { UpdateMemberDto } from 'member/update-member.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -30,7 +34,7 @@ export class AdminController {
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })
-  @ApiOkResponse({ description: 'Excel file of members' })
+  @ApiOkResponse({ description: 'Excel file of members', type: StreamableFile })
   async exportMembers(
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
@@ -53,5 +57,28 @@ export class AdminController {
   @ApiOkResponse({ description: 'List of users', type: [MemberDataDto] })
   async getUsers() {
     return this.adminService.getUsers();
+  }
+
+  @Get('available-cards')
+  @ApiOperation({ summary: 'Get available membership cards (Admin only)' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Admin role required',
+  })
+  @ApiOkResponse({
+    description: 'List of available membership cards',
+    type: [MembershipCardDto],
+  })
+  async getAvailableCardNumbers() {
+    return this.adminService.getAvailableCardNumbers();
+  }
+
+  @Patch('edit-user')
+  @ApiOperation({ summary: 'Edit user (Admin only)' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Admin role required',
+  })
+  @ApiOkResponse({ description: 'User updated', type: MemberDataDto })
+  async updateUser(@Body() updateMemberDto: UpdateMemberDto) {
+    return this.adminService.updateUser(updateMemberDto);
   }
 }

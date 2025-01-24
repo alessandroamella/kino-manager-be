@@ -12,6 +12,7 @@ import {
   Length,
   IsPhoneNumber,
   IsBoolean,
+  IsInt,
 } from 'class-validator';
 import { Member, VerificationMethod } from '@prisma/client';
 import { Transform } from 'class-transformer';
@@ -110,14 +111,14 @@ export class MemberDto extends BaseDocumentDto implements Member {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(({ value }) => new Date(value))
   @IsDate()
   documentExpiry: Date | null;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  membershipNumber: string | null;
+  @IsInt()
+  membershipCardNumber: number | null;
 
   @ApiProperty({ default: false })
   @IsBoolean()
