@@ -59,17 +59,17 @@ export class AdminController {
     return this.adminService.getUsers();
   }
 
-  @Get('available-cards')
-  @ApiOperation({ summary: 'Get available membership cards (Admin only)' })
+  @Get('cards')
+  @ApiOperation({ summary: 'Get membership cards (Admin only)' })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })
   @ApiOkResponse({
-    description: 'List of available membership cards',
+    description: 'List of membership cards',
     type: [MembershipCardDto],
   })
-  async getAvailableCardNumbers() {
-    return this.adminService.getAvailableCardNumbers();
+  async getCardNumbers() {
+    return this.adminService.getCardNumbers();
   }
 
   @Patch('edit-user')
