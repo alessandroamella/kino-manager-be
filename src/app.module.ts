@@ -19,6 +19,7 @@ import path from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MailService } from './mail/mail.service';
 import { MailModule } from './mail/mail.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -113,6 +114,7 @@ import { MailModule } from './mail/mail.module';
     }),
     IstatModule,
     MailModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],

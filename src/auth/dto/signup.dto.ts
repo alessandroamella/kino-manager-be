@@ -11,4 +11,5 @@ export class SignupDto extends PickType(MemberDto, [
   'birthDate',
   'birthComune',
   'address',
+  'phoneNumber',
 ]) {}

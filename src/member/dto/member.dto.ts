@@ -10,6 +10,8 @@ import {
   IsNotEmpty,
   IsStrongPassword,
   Length,
+  IsPhoneNumber,
+  IsBoolean,
 } from 'class-validator';
 import { Member, VerificationMethod } from '@prisma/client';
 import { Transform } from 'class-transformer';
@@ -45,6 +47,10 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsEmail()
   @Transform(({ value }) => value.trim().toLowerCase())
   email: string;
+
+  @ApiProperty()
+  @IsPhoneNumber()
+  phoneNumber: string;
 
   @ApiPropertyOptional({
     description: 'Codice Fiscale, can be null if birthCountry != IT',
@@ -89,4 +95,31 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsOptional()
   @IsEnum(VerificationMethod)
   verificationMethod: VerificationMethod | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  documentNumber: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  documentType: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDate()
+  documentExpiry: Date | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  membershipNumber: string | null;
+
+  @ApiProperty({ default: false })
+  @IsBoolean()
+  isAdmin: boolean;
 }

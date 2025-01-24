@@ -19,7 +19,9 @@ export class MemberController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get user data' })
-  @ApiUnauthorizedResponse({ description: 'Access token not provided' })
+  @ApiUnauthorizedResponse({
+    description: 'Access token not provided, invalid or user not found',
+  })
   @ApiOkResponse({ description: 'User data', type: MemberDataDto })
   @Get('me')
   async getMe(@Req() req: Request) {

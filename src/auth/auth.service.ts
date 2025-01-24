@@ -18,6 +18,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { JwtPayload } from './dto/jwt-payload.type';
 
 @Injectable()
 export class AuthService {
@@ -31,7 +32,15 @@ export class AuthService {
   async login({ email, password }: LoginDto): Promise<AccessTokenDto> {
     this.logger.debug(`Validating member with email: ${email}`);
 
-    const member = await this.prisma.member.findFirst({ where: { email } });
+    const member = await this.prisma.member.findFirst({
+      where: { email },
+      select: {
+        id: true,
+        password: true,
+        email: true,
+        isAdmin: true,
+      },
+    });
     if (!member) {
       throw new NotFoundException();
     }
@@ -41,7 +50,11 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const payload = { userId: member.id, email: member.email };
+    const payload: JwtPayload = {
+      userId: member.id,
+      email: member.email,
+      isAdmin: member.isAdmin,
+    };
 
     return {
       access_token: this.jwtService.sign(payload),
