@@ -85,7 +85,7 @@ export class AuthService {
     this.logger.info(`Member ${id} with email: ${data.email} has been created`);
 
     this.mailService.sendEmail(
-      email,
+      { email, name: data.firstName },
       'Benvuto al Kinó Café',
       await readFile(join(process.cwd(), 'emails/new-account.ejs'), {
         encoding: 'utf-8',

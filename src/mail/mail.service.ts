@@ -1,40 +1,24 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import Mailjet, {
-  Client as MJClient,
-  LibraryResponse as MJResponse,
-  SendEmailV3_1 as MJMail,
-} from 'node-mailjet';
+import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { ConfigService } from '@nestjs/config';
 import ejs from 'ejs';
+import axios, { AxiosResponse } from 'axios'; // Import axios
 
 @Injectable()
-export class MailService implements OnModuleInit {
-  private mailjet: MJClient | undefined;
-
+export class MailService {
   constructor(
     private readonly config: ConfigService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async onModuleInit() {
-    await this.init();
-  }
-
-  private async init() {
-    this.mailjet = new Mailjet({
-      apiKey: this.config.get('MJ_APIKEY_PUBLIC')!,
-      apiSecret: this.config.get('MJ_APIKEY_PRIVATE')!,
-    });
-  }
-
   async sendEmail(
-    to: string,
+    to: { email: string; name?: string },
     subject: string,
     ejsStr: string,
     replacements?: Record<string, string>,
-    attachments?: MJMail.Attachment[],
+    attachments?: any[], // Replace MJMail.Attachment[] with any[] or a more specific type if you define it
+    sandboxMode: boolean = false, // Added sandbox mode as per v3.1 documentation
   ): Promise<boolean> {
     // replace placeholders in html
     let html = ejs.render(ejsStr, replacements);
@@ -46,17 +30,24 @@ export class MailService implements OnModuleInit {
 
     const fromEmail = this.config.get('MJ_FROM_EMAIL');
     const fromName = this.config.get('MJ_FROM_NAME');
+    const apiKeyPublic = this.config.get('MJ_APIKEY_PUBLIC');
+    const apiKeyPrivate = this.config.get('MJ_APIKEY_PRIVATE');
 
-    if (!this.mailjet) {
-      this.logger.error('Mailjet not initialized');
+    if (!apiKeyPublic || !apiKeyPrivate) {
+      this.logger.error('Mailjet API keys not configured.');
       return false;
     }
 
-    // send mail
+    this.logger.debug(
+      `Sending email to ${to.email} (${to.name || '-'}) with subject ${subject} from ${fromEmail} (${fromName})`,
+    );
+
+    // Send mail using axios
     try {
-      const result: MJResponse<MJMail.Response> = await this.mailjet
-        .post('send', { version: 'v3.1' })
-        .request({
+      const response: AxiosResponse = await axios.post(
+        'https://api.mailjet.com/v3.1/send',
+        {
+          SandboxMode: sandboxMode, // Include sandbox mode
           Messages: [
             {
               From: {
@@ -65,43 +56,68 @@ export class MailService implements OnModuleInit {
               },
               To: [
                 {
-                  Email: to,
+                  Email: to.email,
+                  Name: to.name,
                 },
               ],
               Subject: subject,
-              // TextPart: text,
               HTMLPart: html,
               Attachments: attachments,
             },
           ],
-        });
-      this.logger.debug(
-        'Send email result:\n' + JSON.stringify(result.body, null, 2),
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Basic ${Buffer.from(
+              `${apiKeyPublic}:${apiKeyPrivate}`,
+            ).toString('base64')}`, // Basic Auth header
+          },
+        },
       );
-      const { Status, Errors } = result.body.Messages[0];
-      if (Errors && Errors?.length > 0) {
-        this.logger.error('Error sending email to ' + to);
-        this.logger.error(
-          Errors.map(
-            (e) =>
-              `${e.ErrorCode} - ${e.ErrorIdentifier}: ${e.ErrorMessage} - status code ${e.StatusCode} - related to ${e.ErrorRelatedTo}`,
-          ).join('\n'),
-        );
-      }
-      const success = Status === 'success';
 
-      this.logger.info(
-        `Email to ${to} with subject ${subject} ${
-          success
-            ? `sent from ${fromEmail} (${fromName}) successfully`
-            : 'failed'
-        }`,
+      this.logger.debug(
+        'Send email result:\n' + JSON.stringify(response.data, null, 2),
       );
-      return success;
-    } catch (error) {
+
+      if (response.status === 200 || response.status === 201) {
+        const { Messages } = response.data;
+        if (Messages && Messages.length > 0) {
+          const messageResult = Messages[0]; // Assuming you are sending one message at a time in this function
+          if (messageResult.Status === 'success') {
+            this.logger.info(
+              `Email to ${to.email} with subject ${subject} sent successfully from ${fromEmail} (${fromName})`,
+            );
+            return true;
+          } else if (messageResult.Errors && messageResult.Errors.length > 0) {
+            this.logger.error('Error sending email to ' + to.email);
+            messageResult.Errors.forEach((e: any) => {
+              this.logger.error(
+                `${e.ErrorCode} - ${e.ErrorIdentifier}: ${e.ErrorMessage} - status code ${e.StatusCode} - related to ${e.ErrorRelatedTo}`,
+              );
+            });
+            return false;
+          }
+        }
+      } else {
+        this.logger.error(
+          `Unexpected status code ${response.status} when sending email`,
+        );
+        this.logger.error(JSON.stringify(response.data, null, 2)); // Log response body for debugging
+        return false;
+      }
+      return false; // Should not reach here in successful scenario, but for completeness
+    } catch (error: any) {
       this.logger.error('Error sending email');
-      this.logger.error(error);
-      console.error(error);
+      if (axios.isAxiosError(error)) {
+        this.logger.error(
+          `Axios error: ${error.message}, Status: ${error.response?.status}, Data: ${JSON.stringify(
+            error.response?.data,
+          )}`,
+        );
+      } else {
+        this.logger.error(JSON.stringify(error)); // Log generic error
+      }
       return false;
     }
   }
