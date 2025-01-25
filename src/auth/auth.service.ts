@@ -89,7 +89,7 @@ export class AuthService {
 
     this.mailService.sendEmail(
       { email, name: data.firstName },
-      'Benvuto al Kinó Café',
+      'Benvenuto al Kinó Café',
       await readFile(join(process.cwd(), 'emails/new-account.ejs'), {
         encoding: 'utf-8',
       }),

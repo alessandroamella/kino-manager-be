@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -46,4 +40,35 @@ model Member {
 model MembershipCard {
   number Int     @id
   member Member?
+}
+
+model Item {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String?
+  stock       Int             @default(0)
+  price       Decimal?
+  cost        Decimal?
+  purchases   PurchasedItem[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Purchase {
+  id             Int             @id @default(autoincrement())
+  purchaseDate   DateTime        @default(now())
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  purchasedItems PurchasedItem[]
+  discount       Decimal?
+}
+
+model PurchasedItem {
+  purchase   Purchase @relation(fields: [purchaseId], references: [id])
+  purchaseId Int
+  item       Item     @relation(fields: [itemId], references: [id])
+  itemId     Int
+  quantity   Int      @default(1)
+
+  @@id([purchaseId, itemId])
 }
