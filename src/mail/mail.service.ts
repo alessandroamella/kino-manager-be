@@ -3,7 +3,7 @@ import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { ConfigService } from '@nestjs/config';
 import ejs from 'ejs';
-import axios, { AxiosResponse } from 'axios'; // Import axios
+import axios, { AxiosResponse } from 'axios';
 
 @Injectable()
 export class MailService {
@@ -13,12 +13,12 @@ export class MailService {
   ) {}
 
   async sendEmail(
-    to: { email: string; name?: string },
+    to: { email: string; name: string },
     subject: string,
     ejsStr: string,
     replacements?: Record<string, string>,
-    attachments?: any[], // Replace MJMail.Attachment[] with any[] or a more specific type if you define it
-    sandboxMode: boolean = false, // Added sandbox mode as per v3.1 documentation
+    attachments?: any[],
+    sandboxMode: boolean = false,
   ): Promise<boolean> {
     // replace placeholders in html
     let html = ejs.render(ejsStr, replacements);
@@ -42,12 +42,11 @@ export class MailService {
       `Sending email to ${to.email} (${to.name || '-'}) with subject ${subject} from ${fromEmail} (${fromName})`,
     );
 
-    // Send mail using axios
     try {
       const response: AxiosResponse = await axios.post(
         'https://api.mailjet.com/v3.1/send',
         {
-          SandboxMode: sandboxMode, // Include sandbox mode
+          SandboxMode: sandboxMode,
           Messages: [
             {
               From: {
@@ -71,7 +70,7 @@ export class MailService {
             'Content-Type': 'application/json',
             Authorization: `Basic ${Buffer.from(
               `${apiKeyPublic}:${apiKeyPrivate}`,
-            ).toString('base64')}`, // Basic Auth header
+            ).toString('base64')}`,
           },
         },
       );
@@ -80,13 +79,13 @@ export class MailService {
         'Send email result:\n' + JSON.stringify(response.data, null, 2),
       );
 
-      if (response.status === 200 || response.status === 201) {
+      if ([200, 201].includes(response.status)) {
         const { Messages } = response.data;
         if (Messages && Messages.length > 0) {
-          const messageResult = Messages[0]; // Assuming you are sending one message at a time in this function
+          const messageResult = Messages[0];
           if (messageResult.Status === 'success') {
             this.logger.info(
-              `Email to ${to.email} with subject ${subject} sent successfully from ${fromEmail} (${fromName})`,
+              `Email to ${to.email} with subject ${subject} sent successfully from ${fromEmail} (${fromName}) with result ${JSON.stringify(messageResult)}`,
             );
             return true;
           } else if (messageResult.Errors && messageResult.Errors.length > 0) {
@@ -103,10 +102,10 @@ export class MailService {
         this.logger.error(
           `Unexpected status code ${response.status} when sending email`,
         );
-        this.logger.error(JSON.stringify(response.data, null, 2)); // Log response body for debugging
+        this.logger.error(JSON.stringify(response.data, null, 2));
         return false;
       }
-      return false; // Should not reach here in successful scenario, but for completeness
+      return false;
     } catch (error: any) {
       this.logger.error('Error sending email');
       if (axios.isAxiosError(error)) {
@@ -116,7 +115,7 @@ export class MailService {
           )}`,
         );
       } else {
-        this.logger.error(JSON.stringify(error)); // Log generic error
+        this.logger.error(JSON.stringify(error));
       }
       return false;
     }
