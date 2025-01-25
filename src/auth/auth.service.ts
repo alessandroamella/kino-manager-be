@@ -19,6 +19,7 @@ import { join } from 'node:path';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { JwtPayload } from './dto/jwt-payload.type';
+import { memberSelect } from 'member/member.select';
 
 @Injectable()
 export class AuthService {
@@ -66,15 +67,17 @@ export class AuthService {
       where: {
         OR: [
           { email: data.email },
-          { codiceFiscale: data.codiceFiscale || null },
-          {
-            firstName: data.firstName,
-            lastName: data.lastName,
-          },
+          { codiceFiscale: data.codiceFiscale || 'ignored' },
         ],
       },
+      select: memberSelect,
     });
     if (exists) {
+      this.logger.warn(
+        `Member with already exists with email ${data.email} or CF ${data.codiceFiscale || 'ignored'}: ${JSON.stringify(
+          exists,
+        )}`,
+      );
       throw new ConflictException();
     }
 
