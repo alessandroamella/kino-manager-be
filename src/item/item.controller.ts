@@ -27,7 +27,7 @@ export class ItemController {
     return this.itemService.findAll();
   }
 
-  @Post()
+  @Post('add')
   @ApiOperation({ summary: 'Create an item' })
   @ApiOkResponse({ description: 'Created item', type: GetItemDto })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })

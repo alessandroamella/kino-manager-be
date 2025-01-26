@@ -19,6 +19,8 @@ export class ItemService {
 
   async create(data: CreateItemDto): Promise<GetItemDto> {
     this.logger.debug('Creating item');
-    return this.prisma.item.create({ data });
+    const item = this.prisma.item.create({ data });
+    this.logger.info(`Created item: ${item}`);
+    return item;
   }
 }
