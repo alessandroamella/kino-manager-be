@@ -1,4 +1,4 @@
-import { UseGuards, Controller, Get } from '@nestjs/common';
+import { UseGuards, Controller, Get, Post, Body } from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -10,6 +10,7 @@ import { AdminGuard } from 'auth/admin.guard';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import { GetItemDto } from './dto/get-item.dto';
 import { ItemService } from './item.service';
+import { CreateItemDto } from './dto/create-item.dto';
 
 @ApiTags('item')
 @ApiBearerAuth()
@@ -24,5 +25,13 @@ export class ItemController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getAllItems(): Promise<GetItemDto[]> {
     return this.itemService.findAll();
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create an item' })
+  @ApiOkResponse({ description: 'Created item', type: GetItemDto })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  async createItem(@Body() data: CreateItemDto): Promise<GetItemDto> {
+    return this.itemService.create(data);
   }
 }
