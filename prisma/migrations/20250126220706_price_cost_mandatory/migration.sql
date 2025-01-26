@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Item" ALTER COLUMN "price" SET DEFAULT 0,
+ALTER COLUMN "cost" SET DEFAULT 0;

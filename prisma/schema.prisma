@@ -56,8 +56,8 @@ model Item {
   name        String
   description String?
   stock       Int             @default(0)
-  price       Float?
-  cost        Float?
+  price       Float?          @default(0)
+  cost        Float?          @default(0)
   purchases   PurchasedItem[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
