@@ -217,18 +217,17 @@ export class AdminService {
       // this means the card is new and can be assigned and user is verified
       data.verificationDate = new Date();
       data.verificationMethod = VerificationMethod.MANUAL;
+      data.membershipCardNumber = newMembershipCard;
+    } else {
+      delete data.membershipCardNumber;
     }
 
-    delete data.membershipCardNumber; // Remove card number from update
     this.logger.debug(
       `Updating user with ID ${id} with data: ${JSON.stringify(data)}`,
     );
     return this.prisma.member.update({
       where: { id },
-      data: {
-        ...data,
-        membershipCardNumber: newMembershipCard || undefined,
-      },
+      data,
       select: memberSelect,
     });
   }

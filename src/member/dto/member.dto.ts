@@ -15,9 +15,10 @@ import {
   IsInt,
 } from 'class-validator';
 import { Member, VerificationMethod } from '@prisma/client';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
 import { IsCodiceFiscale } from 'validators/is-codice-fiscale.decorator';
+import parsePhoneNumber from 'libphonenumber-js';
 
 export class MemberDto extends BaseDocumentDto implements Member {
   @ApiProperty()
@@ -50,7 +51,10 @@ export class MemberDto extends BaseDocumentDto implements Member {
   email: string;
 
   @ApiProperty()
-  @IsPhoneNumber()
+  @IsPhoneNumber('IT')
+  @Transform(({ value }) => {
+    return parsePhoneNumber(value, 'IT')!.formatInternational();
+  })
   phoneNumber: string;
 
   @ApiPropertyOptional({
@@ -82,13 +86,13 @@ export class MemberDto extends BaseDocumentDto implements Member {
   birthComune: string | null;
 
   @ApiProperty()
-  @Transform(({ value }) => new Date(value))
+  @Type(() => Date)
   @IsDate()
   birthDate: Date;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @Transform(({ value }) => new Date(value))
+  @Type(() => Date)
   @IsDate()
   verificationDate: Date | null;
 
@@ -111,7 +115,7 @@ export class MemberDto extends BaseDocumentDto implements Member {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @Transform(({ value }) => new Date(value))
+  @Type(() => Date)
   @IsDate()
   documentExpiry: Date | null;
 
