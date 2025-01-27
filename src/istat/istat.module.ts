@@ -5,5 +5,6 @@ import { IstatController } from './istat.controller';
 @Module({
   providers: [IstatService],
   controllers: [IstatController],
+  exports: [IstatService],
 })
 export class IstatModule {}

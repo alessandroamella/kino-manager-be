@@ -84,4 +84,17 @@ export class IstatService {
     // limit to 30 results
     return results.map((result) => result.item).slice(0, 30);
   }
+
+  // input: any-cased comune, output: correctly capitalized comune
+  public async getComune(comune: string): Promise<string | null> {
+    const comuni = await this._getComuni();
+    const found = comuni.find(
+      (c) => c.nome.toLowerCase() === comune.toLowerCase(),
+    );
+    if (!found) {
+      this.logger.warn(`Comune ${comune} not found`);
+      return null;
+    }
+    return found.nome;
+  }
 }

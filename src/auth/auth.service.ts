@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { JwtPayload } from './dto/jwt-payload.type';
 import { memberSelect } from 'member/member.select';
-import CodiceFiscale from 'codice-fiscale-js';
+import { IstatService } from 'istat/istat.service';
 
 @Injectable()
 export class AuthService {
@@ -28,32 +28,33 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private jwtService: JwtService,
     private readonly mailService: MailService,
+    private readonly istatService: IstatService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     setTimeout(async () => {
       const users = await this.prisma.member.findMany({
         where: {
           NOT: {
-            codiceFiscale: null,
+            birthComune: null,
           },
         },
       });
       for (const u of users) {
         try {
-          const cfData = CodiceFiscale.computeInverse(u.codiceFiscale);
+          const comune = await this.istatService.getComune(u.birthComune);
+          if (!comune) {
+            this.logger.error(`Comune "${comune}" not found for user ${u.id}`);
+            continue;
+          }
+
           const updated = await this.prisma.member.update({
             where: { id: u.id },
             data: {
-              gender: cfData.gender,
-              birthProvince: cfData.birthplaceProvincia,
+              birthComune: comune,
             },
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
               codiceFiscale: true,
-              gender: true,
-              birthProvince: true,
               birthComune: true,
             },
           });
@@ -124,10 +125,20 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 12);
+    const correctlyCasedComune =
+      data.birthComune && (await this.istatService.getComune(data.birthComune));
     const { id, email } = await this.prisma.member.create({
-      data: { ...data, password: hashedPassword },
+      data: {
+        ...data,
+        birthComune: data.birthComune || correctlyCasedComune,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        email: true,
+      },
     });
-    this.logger.info(`Member ${id} with email: ${data.email} has been created`);
+    this.logger.info(`Member ${id} with email ${email} has been created`);
 
     this.mailService
       .sendEmail(

@@ -4,12 +4,12 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { spawn } from 'child_process';
+import CodiceFiscale from 'codice-fiscale-js';
 import { Logger } from 'winston';
 import { Inject } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
-@ValidatorConstraint({ name: 'isCodiceFiscale', async: true })
+@ValidatorConstraint({ name: 'isCodiceFiscale', async: false })
 export class IsCodiceFiscaleConstraint implements ValidatorConstraintInterface {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -20,57 +20,22 @@ export class IsCodiceFiscaleConstraint implements ValidatorConstraintInterface {
     }
 
     try {
-      return await this.validateWithPython(value);
-    } catch {
+      const data = new CodiceFiscale(value);
+      if (!data.isValid()) {
+        throw new Error('Invalid Codice Fiscale (isValid() returned false)');
+      }
+      this.logger.debug(`Codice Fiscale "${value}" is valid`);
+      return true;
+    } catch (error) {
+      this.logger.debug(
+        `Codice Fiscale "${value}" is invalid: ${error.message}`,
+      );
       return false;
     }
   }
 
   defaultMessage(): string {
     return 'codiceFiscale must be a valid Italian fiscal code';
-  }
-
-  private validateWithPython(cf: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const pythonProcess = spawn('python', [
-        '-m',
-        'codicefiscale',
-        'validate',
-        cf,
-      ]);
-
-      let output = '';
-      let error = '';
-
-      pythonProcess.stdout.on('data', (data) => {
-        this.logger.debug(data.toString());
-        output += data.toString();
-      });
-
-      pythonProcess.stderr.on('data', (data) => {
-        this.logger.error(data.toString());
-        error += data.toString();
-      });
-
-      pythonProcess.on('close', (code) => {
-        if (code === 0) {
-          try {
-            const isValid = output.trim() === '✅';
-            this.logger.debug(
-              `Codice Fiscale ${cf} is ${isValid ? 'valid' : 'invalid'}`,
-            );
-            resolve(isValid);
-          } catch (e) {
-            reject(e);
-          }
-        } else {
-          reject(new Error(`Python script exited with code ${code}: ${error}`));
-        }
-      });
-      pythonProcess.on('error', (err) => {
-        reject(err);
-      });
-    });
   }
 }
 
