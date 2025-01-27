@@ -10,7 +10,10 @@ export class PurchasedItemDto {
   @IsInt()
   itemId: number;
 
-  @ApiProperty({ description: 'Quantity of the item purchased' })
+  @ApiProperty({
+    description: 'Quantity of the item purchased',
+    default: 1,
+  })
   @IsInt()
   @Min(1)
   quantity: number;

@@ -18,5 +18,5 @@ export const memberSelect = {
   verificationDate: true,
   isAdmin: true,
   createdAt: true,
-  updatedAt: false,
+  updatedAt: true,
 } as const;

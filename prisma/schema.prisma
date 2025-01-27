@@ -46,6 +46,7 @@ model Category {
   id          Int      @id @default(autoincrement())
   name        String
   description String?
+  isPublic    Boolean  @default(true)
   items       Item[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -55,9 +56,9 @@ model Item {
   id          Int             @id @default(autoincrement())
   name        String
   description String?
-  stock       Int             @default(0)
-  price       Float?          @default(0)
-  cost        Float?          @default(0)
+  price       Float
+  cost        Float?
+  isPublic    Boolean         @default(true)
   purchases   PurchasedItem[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt

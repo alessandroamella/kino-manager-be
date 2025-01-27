@@ -1,11 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, IsNumber } from 'class-validator';
+import { Item } from '@prisma/client';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsBoolean,
+} from 'class-validator';
 import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
 
-export class ItemDto extends BaseDocumentDto {
+export class ItemDto extends BaseDocumentDto implements Item {
   @ApiProperty({ description: 'Name of the item' })
   @IsString()
   name: string;
+
+  @ApiProperty({
+    description: 'If the item is public',
+    default: true,
+  })
+  @IsBoolean()
+  isPublic: boolean;
 
   @ApiPropertyOptional({
     description: 'Description of the item',
@@ -13,20 +27,21 @@ export class ItemDto extends BaseDocumentDto {
   })
   @IsOptional()
   @IsString()
-  description?: string;
+  description: string | null;
 
-  @ApiProperty({ description: 'Stock quantity of the item' })
+  @ApiProperty({
+    description: 'Category ID of the item',
+  })
   @IsInt()
-  stock: number;
+  categoryId: number | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Price of the item',
     type: Number,
     nullable: true,
   })
-  @IsOptional()
   @IsNumber()
-  price?: number;
+  price: number;
 
   @ApiPropertyOptional({
     description: 'Cost of the item',
@@ -35,5 +50,5 @@ export class ItemDto extends BaseDocumentDto {
   })
   @IsOptional()
   @IsNumber()
-  cost?: number;
+  cost: number | null;
 }

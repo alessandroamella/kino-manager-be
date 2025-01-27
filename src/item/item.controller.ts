@@ -8,9 +8,9 @@ import {
 } from '@nestjs/swagger';
 import { AdminGuard } from 'auth/admin.guard';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
-import { GetItemDto } from './dto/get-item.dto';
 import { ItemService } from './item.service';
 import { CreateItemDto } from './dto/create-item.dto';
+import { GetItemDto } from './dto/get-item.dto';
 
 @ApiTags('item')
 @ApiBearerAuth()
@@ -20,11 +20,11 @@ export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all items' })
+  @ApiOperation({ summary: 'Get all items with categories' })
   @ApiOkResponse({ description: 'All items', type: [GetItemDto] })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  async getAllItems(): Promise<GetItemDto[]> {
-    return this.itemService.findAll();
+  async geItemsWithCategories(): Promise<GetItemDto[]> {
+    return this.itemService.findAllWithCategories();
   }
 
   @Post()
