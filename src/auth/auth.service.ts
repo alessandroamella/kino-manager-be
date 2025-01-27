@@ -30,45 +30,7 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly istatService: IstatService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {
-    setTimeout(async () => {
-      const users = await this.prisma.member.findMany({
-        where: {
-          NOT: {
-            birthComune: null,
-          },
-        },
-      });
-      for (const u of users) {
-        try {
-          const comune = await this.istatService.getComune(u.birthComune);
-          if (!comune) {
-            this.logger.error(`Comune "${comune}" not found for user ${u.id}`);
-            continue;
-          }
-
-          const updated = await this.prisma.member.update({
-            where: { id: u.id },
-            data: {
-              birthComune: comune,
-            },
-            select: {
-              id: true,
-              codiceFiscale: true,
-              birthComune: true,
-            },
-          });
-          this.logger.info(
-            `Updated user ${u.id}: ${JSON.stringify(updated, null, 2)}`,
-          );
-        } catch (error) {
-          this.logger.error(
-            `Error computing CF data for user ${u.id}: ${error}`,
-          );
-        }
-      }
-    }, 3000);
-  }
+  ) {}
 
   async login({ email, password }: LoginDto): Promise<AccessTokenDto> {
     this.logger.debug(`Validating member with email: ${email}`);
