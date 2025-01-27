@@ -8,13 +8,8 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum VerificationMethod {
-  CIE
-  MANUAL
-}
-
 model Member {
-  id                   Int                 @id @default(autoincrement())
+  id                   Int             @id @default(autoincrement())
   firstName            String
   lastName             String
   email                String
@@ -25,17 +20,12 @@ model Member {
   birthDate            DateTime
   birthComune          String? // null if birthCountry is not 'IT'
   birthCountry         String // alpha-2 code
-  verificationMethod   VerificationMethod? // null if not verified
-  verificationDate     DateTime? // null if not verified
-  documentNumber       String? // null if not verified
-  documentType         String? // null if not verified
-  documentExpiry       DateTime? // null if not verified
-  membershipCard       MembershipCard?     @relation(fields: [membershipCardNumber], references: [number])
-  membershipCardNumber Int?                @unique
+  membershipCard       MembershipCard? @relation(fields: [membershipCardNumber], references: [number])
+  membershipCardNumber Int?            @unique
   memberSince          DateTime?
-  isAdmin              Boolean             @default(false)
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
+  isAdmin              Boolean         @default(false)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 }
 
 model MembershipCard {

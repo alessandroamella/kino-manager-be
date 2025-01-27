@@ -10,7 +10,9 @@ import {
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -20,7 +22,7 @@ import { Response } from 'express';
 import { AdminGuard } from 'auth/admin.guard';
 import { MemberDataDto } from 'member/dto/member-data.dto';
 import { MembershipCardDto } from './dto/MembershipCard.dto';
-import { UpdateMemberDto } from 'member/update-member.dto';
+import { AddMembershipCardDto } from './dto/add-membership-card.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -72,13 +74,19 @@ export class AdminController {
     return this.adminService.getCardNumbers();
   }
 
-  @Patch('edit-user')
-  @ApiOperation({ summary: 'Edit user (Admin only)' })
+  @Patch('add-card')
+  @ApiOperation({ summary: 'Add membership card to user (Admin only)' })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })
-  @ApiOkResponse({ description: 'User updated', type: MemberDataDto })
-  async updateUser(@Body() updateMemberDto: UpdateMemberDto) {
-    return this.adminService.updateUser(updateMemberDto);
+  @ApiNotFoundResponse({ description: 'Member or card not found' })
+  @ApiBadRequestResponse({
+    description: 'Invalid input or user already has a card',
+  })
+  @ApiOkResponse({
+    description: 'Applied membership card number',
+  })
+  async addMembershipCard(@Body() dto: AddMembershipCardDto) {
+    return this.adminService.addMembershipCard(dto);
   }
 }

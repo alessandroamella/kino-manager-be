@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
-  IsEnum,
   IsISO31661Alpha2,
   IsDate,
   IsOptional,
@@ -14,7 +13,7 @@ import {
   IsBoolean,
   IsInt,
 } from 'class-validator';
-import { Member, VerificationMethod } from '@prisma/client';
+import { Member } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
 import { IsCodiceFiscale } from 'validators/is-codice-fiscale.decorator';
@@ -94,36 +93,7 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  verificationDate: Date | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
   memberSince: Date | null;
-
-  @ApiPropertyOptional({ enum: VerificationMethod })
-  @IsOptional()
-  @IsEnum(VerificationMethod)
-  verificationMethod: VerificationMethod | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  documentNumber: string | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  documentType: string | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  documentExpiry: Date | null;
 
   @ApiPropertyOptional()
   @IsOptional()

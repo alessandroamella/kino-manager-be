@@ -51,14 +51,16 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const payload: JwtPayload = {
+    return this.generateAccessToken({
       userId: member.id,
       email: member.email,
       isAdmin: member.isAdmin,
-    };
+    });
+  }
 
+  async generateAccessToken(data: JwtPayload): Promise<AccessTokenDto> {
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(data),
     };
   }
 

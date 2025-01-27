@@ -1,4 +1,3 @@
-// admin/admin.service.ts
 import {
   Injectable,
   Inject,
@@ -13,8 +12,7 @@ import { I18nService } from 'nestjs-i18n';
 import { MembershipCardDto } from './dto/MembershipCard.dto';
 import { MemberDataDto } from 'member/dto/member-data.dto';
 import { memberSelect } from 'member/member.select';
-import { UpdateMemberDto } from 'member/update-member.dto';
-import { VerificationMethod } from '@prisma/client';
+import { AddMembershipCardDto } from './dto/add-membership-card.dto';
 
 @Injectable()
 export class AdminService {
@@ -78,12 +76,11 @@ export class AdminService {
       { header: 'Admin', key: 'isAdmin', width: 20 },
       { header: 'Comune di Nascita', key: 'birthComune', width: 23 },
       {
-        header: 'Data di Verifica',
-        key: 'verificationDate',
+        header: 'Tesserato dal',
+        key: 'memberSince',
         width: 30,
         style: { numFmt: 'yyyy-mm-dd hh:mm:ss' },
       },
-      { header: 'Metodo di Verifica', key: 'verificationMethod', width: 20 },
       {
         header: 'Data di Creazione',
         key: 'createdAt',
@@ -92,14 +89,6 @@ export class AdminService {
       },
       { header: 'Numero di Telefono', key: 'phoneNumber', width: 20 },
       { header: 'Indirizzo', key: 'address', width: 60 },
-      { header: 'Numero Documento', key: 'documentNumber', width: 20 },
-      { header: 'Tipo Documento', key: 'documentType', width: 20 },
-      {
-        header: 'Scadenza Documento',
-        key: 'documentExpiry',
-        width: 30,
-        style: { numFmt: 'yyyy-mm-dd' },
-      },
     ];
 
     // Add rows from members data to Members Worksheet
@@ -117,18 +106,10 @@ export class AdminService {
         birthDate: member.birthDate,
         isAdmin: member.isAdmin ? 'Sì' : 'No',
         birthComune: member.birthComune,
-        verificationDate: member.verificationDate,
-        verificationMethod: member.verificationMethod,
+        memberSince: member.memberSince,
         createdAt: member.createdAt,
         phoneNumber: member.phoneNumber,
         address: member.address,
-        documentNumber: member.documentNumber,
-        documentType: member.documentType
-          ? this.i18n.t(`document.${member.documentType}`, {
-              lang: 'it',
-            })
-          : null,
-        documentExpiry: member.documentExpiry,
       });
     });
 
@@ -181,54 +162,38 @@ export class AdminService {
     });
   }
 
-  async updateUser(data: UpdateMemberDto) {
-    const { id } = data;
-    const existing = await this.prisma.member.findUnique({
-      where: { id },
+  async addMembershipCard(data: AddMembershipCardDto): Promise<void> {
+    const member = await this.prisma.member.findUnique({
+      where: { id: data.userId },
+      select: { id: true, membershipCardNumber: true },
     });
-    if (!existing) {
-      this.logger.debug(`User with ID ${id} not found in updateUser`);
-      throw new NotFoundException('User not found');
-    }
-    const newMembershipCard =
-      data.membershipCardNumber && !existing.membershipCardNumber
-        ? data.membershipCardNumber
-        : null;
-    if (newMembershipCard) {
-      const card = await this.prisma.membershipCard.findUnique({
-        where: { number: data.membershipCardNumber },
-        include: { member: true },
-      });
-      if (!card) {
-        this.logger.debug(
-          `Membership card with number ${data.membershipCardNumber} not found`,
-        );
-        throw new NotFoundException('Membership card not found');
-      } else if (card.member) {
-        this.logger.debug(
-          `Membership card with number ${data.membershipCardNumber} already assigned`,
-        );
-        throw new BadRequestException('Card already assigned to another user');
-      }
-
-      this.logger.info(
-        `Assigning membership card ${data.membershipCardNumber} to user with ID ${id}`,
-      );
-      // this means the card is new and can be assigned and user is verified
-      data.verificationDate = new Date();
-      data.verificationMethod = VerificationMethod.MANUAL;
-      data.membershipCardNumber = newMembershipCard;
-    } else {
-      delete data.membershipCardNumber;
+    if (!member) {
+      throw new NotFoundException('Member not found');
+    } else if (member.membershipCardNumber) {
+      throw new BadRequestException('Member already has a membership card');
     }
 
-    this.logger.debug(
-      `Updating user with ID ${id} with data: ${JSON.stringify(data)}`,
-    );
-    return this.prisma.member.update({
-      where: { id },
-      data,
-      select: memberSelect,
+    const membershipCard = await this.prisma.membershipCard.findUnique({
+      where: { number: data.membershipCardNumber },
+      include: { member: true },
+    });
+    if (!membershipCard) {
+      throw new NotFoundException('Membership card not found');
+    } else if (membershipCard.member) {
+      throw new BadRequestException('Membership card already assigned');
+    }
+
+    await this.prisma.member.update({
+      where: { id: data.userId },
+      data: {
+        memberSince: new Date(),
+        membershipCard: {
+          connect: { number: data.membershipCardNumber },
+        },
+      },
+      select: {
+        membershipCardNumber: true,
+      },
     });
   }
 }

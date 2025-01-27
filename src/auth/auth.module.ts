@@ -10,6 +10,7 @@ import { MailModule } from 'mail/mail.module';
 @Module({
   providers: [AuthService, JwtStrategy, IsCodiceFiscaleConstraint],
   imports: [PrismaModule, PassportModule, MailModule],
+  exports: [AuthService],
   controllers: [AuthController],
 })
 export class AuthModule {}
