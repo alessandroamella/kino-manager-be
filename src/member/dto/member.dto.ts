@@ -96,6 +96,12 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsDate()
   verificationDate: Date | null;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  memberSince: Date | null;
+
   @ApiPropertyOptional({ enum: VerificationMethod })
   @IsOptional()
   @IsEnum(VerificationMethod)

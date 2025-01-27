@@ -16,6 +16,7 @@ export const memberSelect = {
   documentExpiry: true,
   verificationMethod: true,
   verificationDate: true,
+  memberSince: true,
   isAdmin: true,
   createdAt: true,
   updatedAt: true,
