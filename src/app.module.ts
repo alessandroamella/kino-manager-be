@@ -22,6 +22,7 @@ import { MailModule } from './mail/mail.module';
 import { AdminModule } from './admin/admin.module';
 import { ItemModule } from './item/item.module';
 import { PurchaseModule } from './purchase/purchase.module';
+import { MembershipPdfModule } from './membership-pdf/membership-pdf.module';
 
 @Module({
   imports: [
@@ -119,6 +120,7 @@ import { PurchaseModule } from './purchase/purchase.module';
     AdminModule,
     ItemModule,
     PurchaseModule,
+    MembershipPdfModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],

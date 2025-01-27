@@ -36,6 +36,7 @@
     "cache-manager": "^5.7.6",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "codice-fiscale-js": "^2.3.22",
     "cookie-parser": "^1.4.7",
     "date-fns": "^4.1.0",
     "ejs": "^3.1.10",
@@ -52,8 +53,10 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
+    "pdf-lib": "^1.17.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "uuid": "^11.0.5",
     "winston": "^3.17.0"
   },
   "devDependencies": {

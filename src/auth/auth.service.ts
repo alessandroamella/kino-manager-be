@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { JwtPayload } from './dto/jwt-payload.type';
 import { memberSelect } from 'member/member.select';
+import CodiceFiscale from 'codice-fiscale-js';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +29,45 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly mailService: MailService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+  ) {
+    setTimeout(async () => {
+      const users = await this.prisma.member.findMany({
+        where: {
+          NOT: {
+            codiceFiscale: null,
+          },
+        },
+      });
+      for (const u of users) {
+        try {
+          const cfData = CodiceFiscale.computeInverse(u.codiceFiscale);
+          const updated = await this.prisma.member.update({
+            where: { id: u.id },
+            data: {
+              gender: cfData.gender,
+              birthProvince: cfData.birthplaceProvincia,
+            },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              codiceFiscale: true,
+              gender: true,
+              birthProvince: true,
+              birthComune: true,
+            },
+          });
+          this.logger.info(
+            `Updated user ${u.id}: ${JSON.stringify(updated, null, 2)}`,
+          );
+        } catch (error) {
+          this.logger.error(
+            `Error computing CF data for user ${u.id}: ${error}`,
+          );
+        }
+      }
+    }, 3000);
+  }
 
   async login({ email, password }: LoginDto): Promise<AccessTokenDto> {
     this.logger.debug(`Validating member with email: ${email}`);

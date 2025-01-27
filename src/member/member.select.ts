@@ -7,6 +7,7 @@ export const memberSelect = {
   codiceFiscale: true,
   birthDate: true,
   birthComune: true,
+  birthProvince: true,
   birthCountry: true,
   phoneNumber: true,
   address: true,

@@ -89,6 +89,13 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @Length(2, 2)
+  birthProvince: string | null;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   @MaxLength(255)
   birthComune: string | null;
 

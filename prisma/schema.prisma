@@ -25,8 +25,9 @@ model Member {
   address              String
   phoneNumber          String
   birthDate            DateTime
-  birthComune          String? // null if birthCountry is not 'IT'
   birthCountry         String // alpha-2 code
+  birthComune          String? // null if birthCountry is not 'IT'
+  birthProvince        String? // null if birthCountry is not 'IT'
   membershipCard       MembershipCard? @relation(fields: [membershipCardNumber], references: [number])
   membershipCardNumber Int?            @unique
   memberSince          DateTime?
