@@ -70,6 +70,7 @@ export class AuthService {
         OR: [
           { email: data.email },
           { codiceFiscale: data.codiceFiscale || 'ignored' },
+          { phoneNumber: data.phoneNumber },
         ],
       },
       select: memberSelect,
@@ -89,17 +90,24 @@ export class AuthService {
     });
     this.logger.info(`Member ${id} with email: ${data.email} has been created`);
 
-    this.mailService.sendEmail(
-      { email, name: data.firstName },
-      'Benvenuto al Kinó Café',
-      await readFile(join(process.cwd(), 'emails/new-account.ejs'), {
-        encoding: 'utf-8',
-      }),
-      {
-        firstName: data.firstName,
-        createdAt: format(new Date(), 'dd MMM yyyy', { locale: it }),
-      },
-    );
+    this.mailService
+      .sendEmail(
+        { email, name: data.firstName },
+        'Benvenuto al Kinó Café',
+        await readFile(join(process.cwd(), 'emails/new-account.ejs'), {
+          encoding: 'utf-8',
+        }),
+        {
+          firstName: data.firstName,
+          createdAt: format(new Date(), 'dd MMM yyyy', { locale: it }),
+        },
+      )
+      .then(() => {
+        this.logger.info(`Welcome email sent to ${email}`);
+      })
+      .catch((error) => {
+        this.logger.error(`Error sending welcome email to ${email}: ${error}`);
+      });
 
     return this.login({ email, password: data.password });
   }

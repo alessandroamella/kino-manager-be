@@ -8,10 +8,17 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum Gender {
+  M
+  F
+  X
+}
+
 model Member {
   id                   Int             @id @default(autoincrement())
   firstName            String
   lastName             String
+  gender               Gender          @default(X)
   email                String
   password             String
   codiceFiscale        String? // null if birthCountry is not 'IT'

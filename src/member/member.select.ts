@@ -10,6 +10,7 @@ export const memberSelect = {
   birthCountry: true,
   phoneNumber: true,
   address: true,
+  gender: true,
   membershipCardNumber: true,
   memberSince: true,
   isAdmin: true,

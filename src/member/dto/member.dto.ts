@@ -12,8 +12,9 @@ import {
   IsPhoneNumber,
   IsBoolean,
   IsInt,
+  IsEnum,
 } from 'class-validator';
-import { Member } from '@prisma/client';
+import { Gender, Member } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
 import { IsCodiceFiscale } from 'validators/is-codice-fiscale.decorator';
@@ -31,6 +32,13 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsNotEmpty()
   @MaxLength(50)
   lastName: string;
+
+  @ApiProperty({
+    default: Gender.M,
+  })
+  @IsOptional()
+  @IsEnum(Gender)
+  gender: Gender;
 
   @ApiProperty()
   @IsString()
