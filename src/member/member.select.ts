@@ -18,3 +18,13 @@ export const memberSelect = {
   createdAt: true,
   updatedAt: true,
 } as const;
+
+export const memberSelectExtended = {
+  ...memberSelect,
+  streetName: true,
+  streetNumber: true,
+  postalCode: true,
+  city: true,
+  province: true,
+  country: true,
+};

@@ -10,15 +10,17 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { I18nService } from 'nestjs-i18n';
 import { MembershipCardDto } from './dto/MembershipCard.dto';
-import { MemberDataDto } from 'member/dto/member-data.dto';
-import { memberSelect } from 'member/member.select';
+import { MemberDataExtendedDto } from 'member/dto/member-data.dto';
+import { memberSelect, memberSelectExtended } from 'member/member.select';
 import { AddMembershipCardDto } from './dto/add-membership-card.dto';
+import { MembershipPdfService } from 'membership-pdf/membership-pdf.service';
 
 @Injectable()
 export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly i18n: I18nService,
+    private readonly membershipPdfService: MembershipPdfService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -142,9 +144,9 @@ export class AdminService {
     return excelBuffer as Buffer;
   }
 
-  async getUsers(): Promise<MemberDataDto[]> {
+  async getUsers(): Promise<MemberDataExtendedDto[]> {
     return this.prisma.member.findMany({
-      select: memberSelect,
+      select: memberSelectExtended,
       orderBy: {
         createdAt: 'asc',
       },
@@ -194,6 +196,54 @@ export class AdminService {
       select: {
         membershipCardNumber: true,
       },
+    });
+  }
+
+  async generateMembershipPdf(
+    userId: number,
+  ): Promise<Uint8Array<ArrayBufferLike>> {
+    const member = await this.prisma.member.findUnique({
+      where: {
+        id: userId,
+        NOT: [
+          {
+            birthComune: null,
+            streetName: null,
+            streetNumber: null,
+            postalCode: null,
+            city: null,
+            province: null,
+            country: null,
+            codiceFiscale: null,
+            birthProvince: null,
+            memberSince: null,
+            membershipCardNumber: null,
+          },
+        ],
+      },
+    });
+    if (!member) {
+      throw new BadRequestException(
+        'Member not found or member data incomplete',
+      );
+    }
+    return this.membershipPdfService.generatePdf({
+      firstName: member.firstName!,
+      lastName: member.lastName!,
+      email: member.email!,
+      birthDate: member.birthDate!,
+      phoneNumber: member.phoneNumber!,
+      country: member.country!,
+      codiceFiscale: member.codiceFiscale!,
+      birthProvince: member.birthProvince!,
+      memberSince: member.memberSince!,
+      membershipCardNumber: member.membershipCardNumber!,
+      birthComune: member.birthComune!,
+      streetName: member.streetName!,
+      streetNumber: member.streetNumber!,
+      postalCode: member.postalCode!,
+      city: member.city!,
+      province: member.province!,
     });
   }
 }

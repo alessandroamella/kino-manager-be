@@ -1,13 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { formatDate } from 'date-fns';
 import { MembershipPdfDataDto } from './dto/membership-pdf-data.dto';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
+import { I18nService } from 'nestjs-i18n';
+import parsePhoneNumber from 'libphonenumber-js';
 
 @Injectable()
 export class MembershipPdfService {
@@ -15,40 +16,17 @@ export class MembershipPdfService {
     process.cwd(),
     'resources/forms/almo_modulo_RICHIESTA_ADESIONE.pdf',
   );
-  private static readonly SIGNED_TEMP_DIR = path.join(process.cwd(), 'temp');
   private static readonly FONTS_DIR = path.join(
     process.cwd(),
     'resources/fonts',
   );
 
   constructor(
+    private readonly i18n: I18nService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {
-    // setTimeout(() => {
-    //   this.writeData({
-    //     firstName: 'Alessandro',
-    //     lastName: 'Amella',
-    //     codiceFiscale: 'MLLLSN03L13F257N',
-    //     address:
-    //       'Via della Cartiera, 16, 41018 San Cesario Sul Panaro MO, Italia',
-    //     birthDate: new Date('2003-07-13T00:00:00.000Z'),
-    //     birthComune: 'Modena',
-    //     birthProvince: 'MO',
-    //     membershipCardNumber: 1387,
-    //     memberSince: new Date('2025-01-27T17:56:24.933Z'),
-    //   });
-    // }, 500);
-  }
+  ) {}
 
-  private GET_SIGNED_TEMP_PATH() {
-    // add current date + randomize the file name to avoid conflicts
-    return path.join(
-      MembershipPdfService.SIGNED_TEMP_DIR,
-      `/almo-signed-${Date.now()}-${uuidv4()}.pdf`,
-    );
-  }
-
-  async writeData(data: MembershipPdfDataDto) {
+  async generatePdf(data: MembershipPdfDataDto) {
     const pdfBytes = await readFile(MembershipPdfService.ALMO_PDF_PATH);
     const pdfDoc = await PDFDocument.load(pdfBytes);
 
@@ -62,23 +40,24 @@ export class MembershipPdfService {
     const dancingScriptFont = await pdfDoc.embedFont(fontBytes);
 
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    // const courierFont = await pdfDoc.embedFont(StandardFonts.Courier); // monospaced font
 
     const pages = pdfDoc.getPages();
     const page = pages[0];
 
-    const { width, height } = page.getSize();
+    page.drawText(data.membershipCardNumber.toString(), {
+      x: 510,
+      y: 764,
+      size: 16,
+      font: helveticaFont,
+    });
 
-    this.logger.debug(`PDF width: ${width}, height: ${height}`);
-
-    // first name
     page.drawText(data.firstName, {
       x: 170,
       y: 550,
       size: 12,
       font: helveticaFont,
     });
-    // last name
+
     page.drawText(data.lastName, {
       x: 392,
       y: 550,
@@ -93,7 +72,7 @@ export class MembershipPdfService {
       font: helveticaFont,
     });
     page.drawText(data.birthProvince, {
-      x: 382,
+      x: 380,
       y: 520,
       size: 12,
       font: helveticaFont,
@@ -114,9 +93,57 @@ export class MembershipPdfService {
       });
     });
 
-    page.drawText(data.address, {
+    page.drawText(data.streetName, {
       x: 167,
-      y: 465,
+      y: 464,
+      size: 12,
+      font: helveticaFont,
+    });
+    page.drawText(data.streetNumber.toString(), {
+      x: 530,
+      y: 464,
+      size: 12,
+      font: helveticaFont,
+    });
+
+    page.drawText(data.postalCode, {
+      x: 110,
+      y: 434,
+      size: 12,
+      font: helveticaFont,
+    });
+    page.drawText(data.city, {
+      x: 227,
+      y: 434,
+      size: 12,
+      font: helveticaFont,
+    });
+    page.drawText(data.province, {
+      x: 412,
+      y: 434,
+      size: 12,
+      font: helveticaFont,
+    });
+    page.drawText(this.i18n.t(`countries.${data.country}`, { lang: 'it' }), {
+      x: 509,
+      y: 434,
+      size: 12,
+      font: helveticaFont,
+    });
+
+    const parsedPhone = parsePhoneNumber(data.phoneNumber, 'IT');
+    if (parsedPhone.isValid()) {
+      page.drawText(parsedPhone.formatNational(), {
+        x: 207,
+        y: 406,
+        size: 12,
+        font: helveticaFont,
+      });
+    }
+
+    page.drawText(data.email, {
+      x: 110,
+      y: 376,
       size: 12,
       font: helveticaFont,
     });
@@ -140,8 +167,6 @@ export class MembershipPdfService {
     this.logger.debug('Data written to PDF');
 
     const savedPdf = await pdfDoc.save();
-    await writeFile(this.GET_SIGNED_TEMP_PATH(), savedPdf);
-
-    this.logger.debug('PDF saved');
+    return savedPdf;
   }
 }

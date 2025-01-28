@@ -6,6 +6,7 @@ import {
   StreamableFile,
   Patch,
   Body,
+  Param,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
@@ -20,7 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AdminGuard } from 'auth/admin.guard';
-import { MemberDataDto } from 'member/dto/member-data.dto';
+import { MemberDataExtendedDto } from 'member/dto/member-data.dto';
 import { MembershipCardDto } from './dto/MembershipCard.dto';
 import { AddMembershipCardDto } from './dto/add-membership-card.dto';
 
@@ -56,7 +57,10 @@ export class AdminController {
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })
-  @ApiOkResponse({ description: 'List of users', type: [MemberDataDto] })
+  @ApiOkResponse({
+    description: 'List of users',
+    type: [MemberDataExtendedDto],
+  })
   async getUsers() {
     return this.adminService.getUsers();
   }
@@ -88,5 +92,28 @@ export class AdminController {
   })
   async addMembershipCard(@Body() dto: AddMembershipCardDto) {
     return this.adminService.addMembershipCard(dto);
+  }
+
+  @Get('membership-form/:id')
+  @ApiOperation({
+    summary: 'Generate a filled membership PDF form (Admin only)',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Admin role required',
+  })
+  @ApiOkResponse({ description: 'PDF form', type: StreamableFile })
+  async generateMembershipForm(
+    @Res({ passthrough: true }) res: Response,
+    @Param('id') id: string,
+  ): Promise<StreamableFile> {
+    const pdfBuffer = await this.adminService.generateMembershipPdf(+id);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=membership-form.pdf',
+    );
+
+    return new StreamableFile(pdfBuffer);
   }
 }
