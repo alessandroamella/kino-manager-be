@@ -21,6 +21,11 @@ export class ItemDto extends BaseDocumentDto implements Item {
   @IsBoolean()
   isPublic: boolean;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  imageUrl: string | null;
+
   @ApiPropertyOptional({
     description: 'Description of the item',
     nullable: true,

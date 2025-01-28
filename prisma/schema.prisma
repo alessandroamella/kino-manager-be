@@ -51,6 +51,7 @@ model MembershipCard {
 model Category {
   id          Int      @id @default(autoincrement())
   name        String
+  imageUrl    String? // for the cashier
   description String?
   isPublic    Boolean  @default(true)
   items       Item[]
@@ -63,6 +64,7 @@ model Item {
   name        String
   description String?
   price       Float
+  imageUrl    String? // for the cashier
   cost        Float?
   isPublic    Boolean         @default(true)
   purchases   PurchasedItem[]

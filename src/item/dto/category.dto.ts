@@ -23,6 +23,11 @@ export class CategoryDto extends BaseDocumentDto implements Category {
   @IsString()
   description: string | null;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  imageUrl: string | null;
+
   @ApiPropertyOptional({
     description: 'If category is public',
   })

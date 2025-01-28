@@ -8,6 +8,7 @@ export class GetItemDto extends PickType(ItemDto, [
   'name',
   'description',
   'price',
+  'imageUrl',
 ]) {
   @ApiProperty()
   @Type(() => CategoryBriefDto)

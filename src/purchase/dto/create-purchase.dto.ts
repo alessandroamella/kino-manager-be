@@ -11,6 +11,8 @@ export class CreatePurchasedItemDto extends OmitType(PurchasedItemDto, [
 export class CreatePurchaseDto extends OmitType(PurchaseDto, [
   'purchasedItems',
   'id',
+  'createdAt',
+  'updatedAt',
 ]) {
   @ApiProperty({
     description: 'List of items purchased',
