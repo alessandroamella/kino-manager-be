@@ -23,6 +23,7 @@ import { AdminModule } from './admin/admin.module';
 import { ItemModule } from './item/item.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { MembershipPdfModule } from './membership-pdf/membership-pdf.module';
+import { R2Module } from './r2/r2.module';
 
 @Module({
   imports: [
@@ -107,6 +108,10 @@ import { MembershipPdfModule } from './membership-pdf/membership-pdf.module';
         MJ_APIKEY_PRIVATE: Joi.string().required(),
         MJ_FROM_EMAIL: Joi.string().email().required(),
         MJ_FROM_NAME: Joi.string().required(),
+        R2_ENDPOINT: Joi.string().required(),
+        R2_ACCESS_KEY_ID: Joi.string().required(),
+        R2_SECRET_ACCESS_KEY: Joi.string().required(),
+        R2_BUCKET_NAME: Joi.string().required(),
       }),
     }),
     AuthModule,
@@ -121,6 +126,7 @@ import { MembershipPdfModule } from './membership-pdf/membership-pdf.module';
     ItemModule,
     PurchaseModule,
     MembershipPdfModule,
+    R2Module,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],

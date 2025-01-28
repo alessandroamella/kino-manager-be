@@ -13,11 +13,12 @@ import {
   IsBoolean,
   IsInt,
   IsEnum,
+  IsUrl,
 } from 'class-validator';
 import { Gender, Member } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
-import { IsCodiceFiscale } from 'validators/is-codice-fiscale.decorator';
+import { IsCodiceFiscale } from 'member/is-codice-fiscale.decorator';
 import parsePhoneNumber from 'libphonenumber-js';
 
 export class MemberDto extends BaseDocumentDto implements Member {
@@ -149,6 +150,12 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @Type(() => Date)
   @IsDate()
   memberSince: Date | null;
+
+  @ApiProperty({
+    description: 'URL of the signature image',
+  })
+  @IsUrl()
+  signatureR2Key: string;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -2,6 +2,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -16,12 +17,14 @@ import { AccessTokenDto } from './dto/access-token.dto';
 import { MailService } from 'mail/mail.service';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { format } from 'date-fns';
+import { format, formatDate } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { JwtPayload } from './dto/jwt-payload.type';
 import { memberSelect } from 'member/member.select';
 import { IstatService } from 'istat/istat.service';
 import CodiceFiscale from 'codice-fiscale-js';
+import { R2Service } from 'r2/r2.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +33,7 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly mailService: MailService,
     private readonly istatService: IstatService,
+    private readonly r2Service: R2Service,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -67,7 +71,14 @@ export class AuthService {
     };
   }
 
-  async signup(data: SignupDto) {
+  private b64WebpToBuffer(base64Image: string): Buffer {
+    const base64Data = base64Image.replace(/^data:image\/webp;base64,/, '');
+    return Buffer.from(base64Data, 'base64');
+  }
+
+  async signup(_data: SignupDto) {
+    const { signatureB64, ...data } = _data;
+
     const exists = await this.prisma.member.findFirst({
       where: {
         OR: [
@@ -87,6 +98,23 @@ export class AuthService {
       throw new ConflictException();
     }
 
+    const signatureR2Key = `signatures/${formatDate(
+      new Date(),
+      'yyyy-MM-dd_HH-mm-ss',
+    )}_${data.codiceFiscale || uuidv4()}`;
+    try {
+      await this.r2Service.uploadFile({
+        key: signatureR2Key,
+        body: this.b64WebpToBuffer(signatureB64),
+        contentType: 'image/webp',
+      });
+    } catch (err) {
+      this.logger.error(`Failed to upload signature to R2: ${err}`);
+      throw new InternalServerErrorException('Failed to upload signature');
+    }
+
+    this.logger.debug(`Signature uploaded to R2 with key ${signatureR2Key}`);
+
     const hashedPassword = await bcrypt.hash(data.password, 12);
 
     let cfData: ReturnType<typeof CodiceFiscale.computeInverse> | undefined;
@@ -96,16 +124,17 @@ export class AuthService {
     } catch (err) {
       this.logger.debug(`Failed to compute inverse CF: ${err}`);
     }
-    const comuneName: string | null = data.birthComune || cfData.birthplace;
+    const comuneName: string | null = data.birthComune || cfData?.birthplace;
     const comuneData =
       comuneName && (await this.istatService.getComuneData(comuneName));
 
     const { id, email } = await this.prisma.member.create({
       data: {
         ...data,
-        birthComune: comuneData.nome || data.birthComune,
-        birthProvince: comuneData.provincia.sigla || data.birthProvince,
+        birthComune: comuneData?.nome || data.birthComune,
+        birthProvince: comuneData?.provincia.sigla || data.birthProvince,
         password: hashedPassword,
+        signatureR2Key,
       },
       select: {
         id: true,

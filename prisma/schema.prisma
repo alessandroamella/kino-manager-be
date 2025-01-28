@@ -31,6 +31,7 @@ model Member {
   country              String?
   phoneNumber          String
   birthDate            DateTime
+  signatureR2Key       String
   birthCountry         String // alpha-2 code
   birthComune          String? // null if birthCountry is not 'IT'
   birthProvince        String? // null if birthCountry is not 'IT'

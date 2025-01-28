@@ -244,6 +244,7 @@ export class AdminService {
       postalCode: member.postalCode!,
       city: member.city!,
       province: member.province!,
+      signatureR2Key: member.signatureR2Key,
     });
   }
 }

@@ -1,25 +1,8 @@
-Applicativo web Kinò Cafè:
+# Kinó Café backend
 
-Deve permettere:
-
-- Registrazione - autenticazione
-
-Per farlo usa i seguenti dati:
-
-- Nome
-- Cognome
-- Numero di telefono
-- Cittadinanza (se italiano: codice fiscale <=> data di nascita && provincia di nascita)
-- Codice fiscale (se input corretto, AUTOGENERA campi on blur)
-- Data di nascita (vedi sopra)
-- Provincia di nascita (vedi sopra)
-
-Problema degli account fake:
-
-- Un utente può registrarsi con dati a caso
-- Si può mettere un CAPTCHA per provare a limitare le richieste da bot, ma lo stesso non mitiga il problema sottostante
-- Visto che le tessere di Almo sono limitate, bisogna assicurarsi che ogni tesserato sia effettivamente un umano e vero
-- Per farlo ho pensato che il processo di registrazione deve terminare, per possedere la tessera ed essere ultimato, ad una VERIFICA (dell'identità), che può avvenire in due modi:
-
-1. Tramite CIE (Carta d'Identità Elettronica): la CIE è una tessera che è possibile leggere (e usare per verificare l'identità) via NFC, esistono SDK per Android (https://github.com/italia/cieid-android-sdk) e Python (https://github.com/italia/cie-nis-python-sdk). La domanda è se è possibile utilizzare la Web NFC API per effettuare le stesse operazioni, ma via web. In tal modo, dal sito, sarebbe possibile verificare la propria identità scansionando la tessera con il lettore NFC del proprio telefono / tablet, senza dover utilizzare app separate né alcun intervento manuale.
-2. Manualmente, mostrando un documento d'identità alla cassa
+1. Crea un bucket Cloudflare R2 e usalo per settare le env `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`.
+2. Registrati su MailJet e setta le env `MJ_APIKEY_PUBLIC`, `MJ_APIKEY_PRIVATE`, `MJ_FROM_EMAIL`, `MJ_FROM_NAME`.
+3. Supabase o un qualunque altro servizio di database Postgres, imposta `DATABASE_URL` e `DIRECT_URL`.
+4. `NODE_ENV`, `JWT_SECRET`, `COOKIE_SECRET`.
+5. `pnpm install`, `pnpx prisma migrate deploy`, `pnpm dev` e via.
+6. Per prod: `pnpm build` e `pnpm start`.

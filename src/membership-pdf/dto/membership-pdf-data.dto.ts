@@ -19,6 +19,7 @@ export class MembershipPdfDataDto extends PickType(MemberDto, [
   'birthDate',
   'phoneNumber',
   'country',
+  'signatureR2Key',
 ] as const) {
   @ApiProperty()
   @IsString()

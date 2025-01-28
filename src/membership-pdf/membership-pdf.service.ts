@@ -6,9 +6,12 @@ import path from 'path';
 import { formatDate } from 'date-fns';
 import { MembershipPdfDataDto } from './dto/membership-pdf-data.dto';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
-import fontkit from '@pdf-lib/fontkit';
 import { I18nService } from 'nestjs-i18n';
 import parsePhoneNumber from 'libphonenumber-js';
+import { R2Service } from 'r2/r2.service';
+import sharp from 'sharp';
+
+// import fontkit from '@pdf-lib/fontkit';
 
 @Injectable()
 export class MembershipPdfService {
@@ -23,21 +26,38 @@ export class MembershipPdfService {
 
   constructor(
     private readonly i18n: I18nService,
+    private readonly r2Service: R2Service,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
   async generatePdf(data: MembershipPdfDataDto) {
+    const signatureWebpStream = await this.r2Service.downloadFile(
+      data.signatureR2Key,
+    );
+    // load to sharp and convert to Uint8Arrays or ArrayBuffers png
+    const reader = signatureWebpStream.getReader(); // ReadableStreamDefaultReader
+    const chunks = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+    const buffer = Buffer.concat(chunks);
+    const signaturePngBuffer = await sharp(buffer).png().toBuffer();
+
     const pdfBytes = await readFile(MembershipPdfService.ALMO_PDF_PATH);
     const pdfDoc = await PDFDocument.load(pdfBytes);
 
-    pdfDoc.registerFontkit(fontkit);
+    const signaturePng = await pdfDoc.embedPng(signaturePngBuffer);
 
-    const fontBytes = await readFile(
-      path.join(MembershipPdfService.FONTS_DIR, 'MsMadi-Regular.ttf'),
-    );
-    this.logger.debug(`Font file read, byte length: ${fontBytes.length}`);
+    // pdfDoc.registerFontkit(fontkit);
 
-    const dancingScriptFont = await pdfDoc.embedFont(fontBytes);
+    // const fontBytes = await readFile(
+    //   path.join(MembershipPdfService.FONTS_DIR, 'MsMadi-Regular.ttf'),
+    // );
+    // this.logger.debug(`Font file read, byte length: ${fontBytes.length}`);
+
+    // const cursiveFont = await pdfDoc.embedFont(fontBytes);
 
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
@@ -113,9 +133,9 @@ export class MembershipPdfService {
       font: helveticaFont,
     });
     page.drawText(data.city, {
-      x: 227,
+      x: 224,
       y: 434,
-      size: 12,
+      size: data.city.length > 20 ? 11 : 12,
       font: helveticaFont,
     });
     page.drawText(data.province, {
@@ -157,11 +177,12 @@ export class MembershipPdfService {
     });
 
     // signature
-    page.drawText(`${data.firstName} ${data.lastName}`, {
-      x: 105,
-      y: 72,
-      size: 24,
-      font: dancingScriptFont,
+    const pngDims = signaturePng.scale(0.3);
+    page.drawImage(signaturePng, {
+      x: 90,
+      y: 70,
+      width: pngDims.width,
+      height: pngDims.height,
     });
 
     this.logger.debug('Data written to PDF');
