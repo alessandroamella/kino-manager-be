@@ -81,6 +81,46 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsNotEmpty()
   address: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  streetName: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  streetNumber: number | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(10)
+  postalCode: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  city: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @Length(2, 2)
+  province: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  country: string | null;
+
   @ApiProperty()
   @IsISO31661Alpha2()
   birthCountry: string;

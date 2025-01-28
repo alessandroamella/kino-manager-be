@@ -22,7 +22,13 @@ model Member {
   email                String
   password             String
   codiceFiscale        String? // null if birthCountry is not 'IT'
-  address              String
+  address              String // to be split into address components
+  streetName           String?
+  streetNumber         Int?
+  postalCode           String?
+  city                 String?
+  province             String?
+  country              String?
   phoneNumber          String
   birthDate            DateTime
   birthCountry         String // alpha-2 code

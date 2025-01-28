@@ -24,19 +24,20 @@ export class MembershipPdfService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
-    setTimeout(() => {
-      this.writeData({
-        firstName: 'Alessandro',
-        lastName: 'Amella',
-        address:
-          'Via della Cartiera, 16, 41018 San Cesario Sul Panaro MO, Italia',
-        birthDate: new Date('2003-07-13T00:00:00.000Z'),
-        birthComune: 'Modena',
-        birthProvince: 'MO',
-        membershipCardNumber: 1387,
-        memberSince: new Date('2025-01-27T17:56:24.933Z'),
-      });
-    }, 500);
+    // setTimeout(() => {
+    //   this.writeData({
+    //     firstName: 'Alessandro',
+    //     lastName: 'Amella',
+    //     codiceFiscale: 'MLLLSN03L13F257N',
+    //     address:
+    //       'Via della Cartiera, 16, 41018 San Cesario Sul Panaro MO, Italia',
+    //     birthDate: new Date('2003-07-13T00:00:00.000Z'),
+    //     birthComune: 'Modena',
+    //     birthProvince: 'MO',
+    //     membershipCardNumber: 1387,
+    //     memberSince: new Date('2025-01-27T17:56:24.933Z'),
+    //   });
+    // }, 500);
   }
 
   private GET_SIGNED_TEMP_PATH() {
@@ -56,11 +57,12 @@ export class MembershipPdfService {
     const fontBytes = await readFile(
       path.join(MembershipPdfService.FONTS_DIR, 'MsMadi-Regular.ttf'),
     );
-    this.logger.debug(`Font file read, byte length: ${fontBytes.length}`); // Add this line
+    this.logger.debug(`Font file read, byte length: ${fontBytes.length}`);
 
     const dancingScriptFont = await pdfDoc.embedFont(fontBytes);
 
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    // const courierFont = await pdfDoc.embedFont(StandardFonts.Courier); // monospaced font
 
     const pages = pdfDoc.getPages();
     const page = pages[0];
@@ -69,6 +71,57 @@ export class MembershipPdfService {
 
     this.logger.debug(`PDF width: ${width}, height: ${height}`);
 
+    // first name
+    page.drawText(data.firstName, {
+      x: 170,
+      y: 550,
+      size: 12,
+      font: helveticaFont,
+    });
+    // last name
+    page.drawText(data.lastName, {
+      x: 392,
+      y: 550,
+      size: 12,
+      font: helveticaFont,
+    });
+
+    page.drawText(data.birthComune, {
+      x: 122,
+      y: 520,
+      size: 12,
+      font: helveticaFont,
+    });
+    page.drawText(data.birthProvince, {
+      x: 382,
+      y: 520,
+      size: 12,
+      font: helveticaFont,
+    });
+    page.drawText(`${formatDate(data.birthDate, 'dd    MM    yyyy')}`, {
+      x: 488,
+      y: 520,
+      size: 12,
+      font: helveticaFont,
+    });
+
+    data.codiceFiscale.split('').forEach((char, i) => {
+      page.drawText(char, {
+        x: Math.round(148 + i * 19.35),
+        y: 491,
+        size: 12,
+        font: helveticaFont,
+      });
+    });
+
+    page.drawText(data.address, {
+      x: 167,
+      y: 465,
+      size: 12,
+      font: helveticaFont,
+    });
+
+    // signature date
     page.drawText(formatDate(data.memberSince, 'dd    MM    yyyy'), {
       x: 136,
       y: 42,
@@ -76,6 +129,7 @@ export class MembershipPdfService {
       font: helveticaFont,
     });
 
+    // signature
     page.drawText(`${data.firstName} ${data.lastName}`, {
       x: 105,
       y: 72,
