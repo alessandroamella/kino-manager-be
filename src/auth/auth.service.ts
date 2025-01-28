@@ -21,6 +21,7 @@ import { it } from 'date-fns/locale';
 import { JwtPayload } from './dto/jwt-payload.type';
 import { memberSelect } from 'member/member.select';
 import { IstatService } from 'istat/istat.service';
+import CodiceFiscale from 'codice-fiscale-js';
 
 @Injectable()
 export class AuthService {
@@ -87,12 +88,23 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 12);
-    const correctlyCasedComune =
-      data.birthComune && (await this.istatService.getComune(data.birthComune));
+
+    let cfData: ReturnType<typeof CodiceFiscale.computeInverse> | undefined;
+    try {
+      cfData =
+        data.codiceFiscale && CodiceFiscale.computeInverse(data.codiceFiscale);
+    } catch (err) {
+      this.logger.debug(`Failed to compute inverse CF: ${err}`);
+    }
+    const comuneName: string | null = data.birthComune || cfData.birthplace;
+    const comuneData =
+      comuneName && (await this.istatService.getComuneData(comuneName));
+
     const { id, email } = await this.prisma.member.create({
       data: {
         ...data,
-        birthComune: data.birthComune || correctlyCasedComune,
+        birthComune: comuneData.nome || data.birthComune,
+        birthProvince: comuneData.provincia.sigla || data.birthProvince,
         password: hashedPassword,
       },
       select: {

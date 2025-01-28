@@ -86,7 +86,7 @@ export class IstatService {
   }
 
   // input: any-cased comune, output: correctly capitalized comune
-  public async getComune(comune: string): Promise<string | null> {
+  public async getComuneData(comune: string): Promise<ComuneDto | null> {
     const comuni = await this._getComuni();
     const found = comuni.find(
       (c) => c.nome.toLowerCase() === comune.toLowerCase(),
@@ -95,6 +95,6 @@ export class IstatService {
       this.logger.warn(`Comune ${comune} not found`);
       return null;
     }
-    return found.nome;
+    return found;
   }
 }
