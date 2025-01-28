@@ -6,7 +6,8 @@ export class MembershipPdfDataDto extends PickType(MemberDto, [
   'lastName',
   'address',
   'birthDate',
-  'birthCountry',
+  'birthComune',
   'birthProvince',
   'memberSince',
+  'membershipCardNumber',
 ]) {}
