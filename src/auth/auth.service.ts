@@ -30,7 +30,64 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly istatService: IstatService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+  ) {
+    setTimeout(async () => {
+      const members = await this.prisma.member.findMany({
+        select: {
+          id: true,
+          address: true,
+        },
+        where: {
+          postalCode: null,
+        },
+      });
+
+      for (const m of members) {
+        // e.g. "Via della Cartiera, 16, 41018 San Cesario Sul Panaro MO, Italia"
+        // => we need to get:
+        // streetName
+        // streetNumber
+        // postalCode
+        // city
+        // province
+        // country
+        const split = m.address.split(', ');
+        const [streetName, streetNumber, mix] =
+          split.length === 2
+            ? [null, null, ...split]
+            : split.length === 4
+              ? split
+              : [split[0], null, ...split.slice(1)];
+        const postalCode = mix.split(' ')[0];
+        // city is after postalCode but before last element
+        const city = mix.split(' ').slice(1, -1).join(' ');
+        // province is the last element
+        const province = mix.split(' ').pop();
+        const country = 'IT';
+
+        console.log({
+          streetName,
+          streetNumber,
+          postalCode,
+          city,
+          province,
+          country,
+        });
+
+        await this.prisma.member.update({
+          where: { id: m.id },
+          data: {
+            streetName,
+            streetNumber: streetNumber ? parseInt(streetNumber) : undefined,
+            postalCode,
+            city,
+            province,
+            country,
+          },
+        });
+      }
+    }, 500);
+  }
 
   async login({ email, password }: LoginDto): Promise<AccessTokenDto> {
     this.logger.debug(`Validating member with email: ${email}`);
