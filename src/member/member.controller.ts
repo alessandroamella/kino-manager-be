@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -10,14 +10,15 @@ import { MemberService } from './member.service';
 import { MemberDataDto } from './dto/member-data.dto';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import { Request } from 'express';
+import { AddSignatureDto } from './dto/add-signature.dto';
 
 @ApiTags('member')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('member')
 export class MemberController {
   constructor(private memberService: MemberService) {}
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get user data' })
   @ApiUnauthorizedResponse({
     description: 'Access token not provided, invalid or user not found',
@@ -26,5 +27,18 @@ export class MemberController {
   @Get('me')
   async getMe(@Req() req: Request) {
     return this.memberService.getMember(+req.user!.userId);
+  }
+
+  // TODO: remove when all users have signature
+  @ApiOperation({
+    summary:
+      "Adds signature if user doesn't have it already (for users that registered before signature was added)",
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token not provided, invalid or user not found',
+  })
+  @Post('signature')
+  async addSignature(@Req() req: Request, @Body() dto: AddSignatureDto) {
+    return this.memberService.addSignature(+req.user!.userId, dto.signatureB64);
   }
 }

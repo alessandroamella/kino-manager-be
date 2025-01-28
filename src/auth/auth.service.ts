@@ -76,6 +76,28 @@ export class AuthService {
     return Buffer.from(base64Data, 'base64');
   }
 
+  async uploadBase64Signature(
+    signatureB64: string,
+    codiceFiscale?: string,
+  ): Promise<string> {
+    const signatureR2Key = `signatures/${formatDate(
+      new Date(),
+      'yyyy-MM-dd_HH-mm-ss',
+    )}_${codiceFiscale || uuidv4()}`;
+    try {
+      await this.r2Service.uploadFile({
+        key: signatureR2Key,
+        body: this.b64WebpToBuffer(signatureB64),
+        contentType: 'image/webp',
+      });
+      this.logger.debug(`Signature uploaded to R2 with key ${signatureR2Key}`);
+      return signatureR2Key; // Return the key for later use
+    } catch (err) {
+      this.logger.error(`Failed to upload signature to R2: ${err}`);
+      throw new InternalServerErrorException('Failed to upload signature');
+    }
+  }
+
   async signup(_data: SignupDto) {
     const { signatureB64, ...data } = _data;
 
@@ -98,20 +120,10 @@ export class AuthService {
       throw new ConflictException();
     }
 
-    const signatureR2Key = `signatures/${formatDate(
-      new Date(),
-      'yyyy-MM-dd_HH-mm-ss',
-    )}_${data.codiceFiscale || uuidv4()}`;
-    try {
-      await this.r2Service.uploadFile({
-        key: signatureR2Key,
-        body: this.b64WebpToBuffer(signatureB64),
-        contentType: 'image/webp',
-      });
-    } catch (err) {
-      this.logger.error(`Failed to upload signature to R2: ${err}`);
-      throw new InternalServerErrorException('Failed to upload signature');
-    }
+    const signatureR2Key = await this.uploadBase64Signature(
+      signatureB64,
+      data.codiceFiscale,
+    );
 
     this.logger.debug(`Signature uploaded to R2 with key ${signatureR2Key}`);
 

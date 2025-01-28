@@ -1,4 +1,10 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { PrismaService } from 'prisma/prisma.service';
 import { Logger } from 'winston';
@@ -32,5 +38,35 @@ export class MemberService {
       ...member,
       accessToken: access_token,
     };
+  }
+
+  async addSignature(userId: number, signatureB64: string) {
+    const member = await this.prisma.member.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        signatureR2Key: true,
+        codiceFiscale: true,
+      },
+    });
+    if (!member) {
+      throw new NotFoundException();
+    } else if (member.signatureR2Key !== '') {
+      // default value is epsilon for users that registered before it was added
+      throw new UnauthorizedException(
+        "Signature already present and can't be overwritten",
+      );
+    }
+    this.logger.debug(`Adding signature to member with id ${userId}`);
+
+    const signatureR2Key = await this.authService.uploadBase64Signature(
+      signatureB64,
+      member.codiceFiscale,
+    );
+    await this.prisma.member.update({
+      where: { id: userId },
+      data: { signatureR2Key },
+    });
+    return HttpStatus.OK;
   }
 }

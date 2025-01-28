@@ -10,5 +10,4 @@ export class MemberDataDto extends OmitType(MemberDataExtendedDto, [
   'city',
   'province',
   'country',
-  'signatureR2Key',
 ]) {}

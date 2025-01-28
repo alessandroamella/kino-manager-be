@@ -14,6 +14,7 @@ export const memberSelect = {
   gender: true,
   membershipCardNumber: true,
   memberSince: true,
+  signatureR2Key: true,
   isAdmin: true,
   createdAt: true,
   updatedAt: true,
@@ -27,5 +28,4 @@ export const memberSelectExtended = {
   city: true,
   province: true,
   country: true,
-  signatureR2Key: true,
 };
