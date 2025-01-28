@@ -2,6 +2,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -13,6 +14,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
+import { Readable } from 'stream';
 
 @Injectable()
 export class R2Service implements OnModuleInit {
@@ -119,7 +121,7 @@ export class R2Service implements OnModuleInit {
         error,
       );
       if (error.name === 'NoSuchKey') {
-        throw new InternalServerErrorException(
+        throw new NotFoundException(
           `File "${key}" not found in bucket "${this.bucketName}"`,
         );
       }
@@ -127,5 +129,20 @@ export class R2Service implements OnModuleInit {
         `Failed to download file "${key}": ${error.message}`,
       );
     }
+  }
+
+  async downloadFileAsStream(key: string): Promise<Readable> {
+    const readableStream = await this.downloadFile(key);
+    const reader = readableStream.getReader();
+    return new Readable({
+      async read() {
+        const { done, value } = await reader.read();
+        if (done) {
+          this.push(null); // signal end of stream
+        } else {
+          this.push(Buffer.from(value)); // push chunk to Node.js Readable
+        }
+      },
+    });
   }
 }

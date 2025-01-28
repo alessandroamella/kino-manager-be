@@ -27,4 +27,5 @@ export const memberSelectExtended = {
   city: true,
   province: true,
   country: true,
+  signatureR2Key: true,
 };

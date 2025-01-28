@@ -1,10 +1,7 @@
 import { OmitType } from '@nestjs/swagger';
 import { MemberDto } from './member.dto';
 
-export class MemberDataExtendedDto extends OmitType(MemberDto, [
-  'password',
-  'signatureR2Key',
-]) {}
+export class MemberDataExtendedDto extends OmitType(MemberDto, ['password']) {}
 
 export class MemberDataDto extends OmitType(MemberDataExtendedDto, [
   'streetName',
@@ -13,4 +10,5 @@ export class MemberDataDto extends OmitType(MemberDataExtendedDto, [
   'city',
   'province',
   'country',
+  'signatureR2Key',
 ]) {}

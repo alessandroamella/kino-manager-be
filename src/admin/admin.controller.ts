@@ -116,4 +116,18 @@ export class AdminController {
 
     return new StreamableFile(pdfBuffer);
   }
+
+  @Get('signature/:key')
+  @ApiOperation({ summary: 'Get user signature (Admin only)' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Admin role required',
+  })
+  @ApiNotFoundResponse({ description: 'Signature not found' })
+  @ApiOkResponse({ description: 'User signature', type: StreamableFile })
+  async getSignature(@Param('key') key: string) {
+    const readable = await this.adminService.getSignature(key);
+    return new StreamableFile(readable, {
+      type: 'image/webp',
+    });
+  }
 }

@@ -14,6 +14,7 @@ import { MemberDataExtendedDto } from 'member/dto/member-data.dto';
 import { memberSelect, memberSelectExtended } from 'member/member.select';
 import { AddMembershipCardDto } from './dto/add-membership-card.dto';
 import { MembershipPdfService } from 'membership-pdf/membership-pdf.service';
+import { R2Service } from 'r2/r2.service';
 
 @Injectable()
 export class AdminService {
@@ -21,6 +22,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly i18n: I18nService,
     private readonly membershipPdfService: MembershipPdfService,
+    private readonly r2Service: R2Service,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -246,5 +248,9 @@ export class AdminService {
       province: member.province!,
       signatureR2Key: member.signatureR2Key,
     });
+  }
+
+  async getSignature(signatureR2Key: string) {
+    return this.r2Service.downloadFileAsStream(signatureR2Key);
   }
 }

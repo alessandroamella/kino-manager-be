@@ -11,17 +11,11 @@ import parsePhoneNumber from 'libphonenumber-js';
 import { R2Service } from 'r2/r2.service';
 import sharp from 'sharp';
 
-// import fontkit from '@pdf-lib/fontkit';
-
 @Injectable()
 export class MembershipPdfService {
   private static readonly ALMO_PDF_PATH = path.join(
     process.cwd(),
     'resources/forms/almo_modulo_RICHIESTA_ADESIONE.pdf',
-  );
-  private static readonly FONTS_DIR = path.join(
-    process.cwd(),
-    'resources/fonts',
   );
 
   constructor(
@@ -35,12 +29,9 @@ export class MembershipPdfService {
       data.signatureR2Key,
     );
     // load to sharp and convert to Uint8Arrays or ArrayBuffers png
-    const reader = signatureWebpStream.getReader(); // ReadableStreamDefaultReader
-    const chunks = [];
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of signatureWebpStream) {
+      chunks.push(chunk);
     }
     const buffer = Buffer.concat(chunks);
     const signaturePngBuffer = await sharp(buffer).png().toBuffer();
@@ -49,15 +40,6 @@ export class MembershipPdfService {
     const pdfDoc = await PDFDocument.load(pdfBytes);
 
     const signaturePng = await pdfDoc.embedPng(signaturePngBuffer);
-
-    // pdfDoc.registerFontkit(fontkit);
-
-    // const fontBytes = await readFile(
-    //   path.join(MembershipPdfService.FONTS_DIR, 'MsMadi-Regular.ttf'),
-    // );
-    // this.logger.debug(`Font file read, byte length: ${fontBytes.length}`);
-
-    // const cursiveFont = await pdfDoc.embedFont(fontBytes);
 
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
@@ -179,8 +161,8 @@ export class MembershipPdfService {
     // signature
     const pngDims = signaturePng.scale(0.3);
     page.drawImage(signaturePng, {
-      x: 90,
-      y: 70,
+      x: 105,
+      y: 72,
       width: pngDims.width,
       height: pngDims.height,
     });
