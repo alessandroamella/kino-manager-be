@@ -55,6 +55,7 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pdf-lib": "^1.17.1",
+    "react-obfuscate-email": "^1.1.5",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "sharp": "^0.33.5",

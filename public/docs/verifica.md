@@ -1,26 +1,32 @@
-# Info sulla verifica
+# Info sulla Verifica: Accedi al Kinó Café!
 
-<!-- spiega che devi verificarti via documento d'identità per tesserarti all'associazione -->
+Ti sei appena registrato? Benvenuto! Forse hai notato che il tuo account è indicato come "non verificato". Niente paura, è un passaggio semplice e ti spieghiamo perché e come farlo!
 
-Se ti sei registrato, avrai probabilmente notato che il tuo account è segnato come "non verificato". Ma cosa significa?
+## Perché devo verificare il mio account?
 
-## Perché devo verificarmi?
+_Kinó Café_ è un'iniziativa promossa da [Almo](https://www.facebook.com/groups/96413830592/), un'associazione culturale senza scopo di lucro. Per permetterci di offrirti serate, eventi e tante attività interessanti al _Kinó Café_, ti chiediamo un piccolo passo: la "verifica". Con la verifica, entri a far parte della nostra community! 🎉
 
-_Kinó Café_ è un progetto di [Almo](https://www.facebook.com/groups/96413830592/), un'associazione no profit. Per poter usufruire di tutti i servizi offerti dall'associazione, incluso l'accesso alle serate organizzate di _Kinó Café_, è necessario tesserarsi.
+## Quanto costa e come funziona la verifica?
 
-## Quanto costa e come funziona?
+**La verifica è completamente gratuita!** Non ci sono costi da sostenere. 🤝
 
-Il tesseramento è gratuito.
-Una volta tesserato, sarai considerato socio dell'associazione fino al 31 dicembre dell'anno in corso.
+Una volta verificato, sarai considerato membro della nostra community **fino al 31 dicembre di quest'anno**. Se apprezzi l'ambiente e le nostre attività (e speriamo di sì ;), potrai confermare la tua partecipazione per l'anno successivo.
 
-## Come posso verificarmi?
+## Come posso verificare il mio account?
 
-Per verificarti, è sufficiente presentarti a una serata di _Kinó Café_ con un documento d'identità in corso di validità. Un membro dello staff ti aiuterà a completare la procedura.
+È molto semplice! Quando vieni a trovarci per una serata al _Kinó Café_, **porta con te un documento d'identità** (carta d'identità, patente, passaporto...). Ti assegneremo una tessera di Almo appena possibile e il gioco è fatto!
 
-## Che vantaggi ho?
+## Quali vantaggi ho dalla verifica?
 
-Essere socio ti permette di partecipare alle serate di _Kinó Café_ e di usufruire di tutti i servizi offerti dall'associazione, che includono spettacoli, corsi, proiezioni e molto altro. Info su [kinocampus.it](https://www.kinocampus.it/).
+Verificare il tuo account ti offre diversi vantaggi:
 
-## Domande?
+- **Accesso garantito a tutte le serate e gli eventi del _Kinó Café_!** Non dovrai più chiederti se puoi entrare, sei sempre il benvenuto! 🥳
+- **Sostieni un progetto culturale e senza scopo di lucro** che anima la zona! 💪
+- **Diventi parte di una community** di persone appassionate di musica, arte, cinema e molto altro! 🫂
+- **Puoi usufruire di tutti i servizi offerti da Almo**, come corsi, proiezioni, spettacoli e altre iniziative! Scopri di più su [kinocampus.it](https://www.kinocampus.it/).
 
-Se hai domande, non esitare a scriverci una mail a kinocafesancesario@gmail.com.
+In sintesi, la "verifica" è un piccolo gesto per supportare il _Kinó Café_ e Almo e per accedere a un mondo di opportunità! 😉
+
+## Hai domande o dubbi?
+
+Trovi sotto il nostro indirizzo email. Scrivici e ti risponderemo al più presto!
