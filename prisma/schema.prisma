@@ -74,6 +74,11 @@ model Item {
   categoryId  Int?
 }
 
+enum PaymentMethod {
+  CASH
+  CARD
+}
+
 model Purchase {
   id             Int             @id @default(autoincrement())
   purchaseDate   DateTime        @default(now())
@@ -81,6 +86,8 @@ model Purchase {
   updatedAt      DateTime        @updatedAt
   purchasedItems PurchasedItem[]
   discount       Float?
+  paymentMethod  PaymentMethod
+  total          Float
 }
 
 model PurchasedItem {

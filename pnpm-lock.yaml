@@ -44,6 +44,9 @@ importers:
       '@prisma/client':
         specifier: ^6.3.0
         version: 6.3.0(prisma@6.3.0(typescript@5.7.3))(typescript@5.7.3)
+      '@types/lodash':
+        specifier: ^4.17.15
+        version: 4.17.15
       axios:
         specifier: ^1.7.9
         version: 1.7.9
@@ -95,6 +98,9 @@ importers:
       libphonenumber-js:
         specifier: ^1.11.18
         version: 1.11.18
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       nest-winston:
         specifier: ^1.10.2
         version: 1.10.2(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(winston@3.17.0)
@@ -1372,6 +1378,9 @@ packages:
 
   '@types/jsonwebtoken@9.0.8':
     resolution: {integrity: sha512-7fx54m60nLFUVYlxAB1xpe9CBWX2vSrk50Y6ogRJ1v5xxtba7qXTg5BgYDN5dq+yuQQ9HaVlHJyAAt1/mxryFg==}
+
+  '@types/lodash@4.17.15':
+    resolution: {integrity: sha512-w/P33JFeySuhN6JLkysYUK2gEmy9kHHFN7E8ro0tkfmlDOgxBDzWEZ/J8cWA+fHqFevpswDTFZnDx+R9lbL6xw==}
 
   '@types/methods@1.1.4':
     resolution: {integrity: sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ==}
@@ -5884,6 +5893,8 @@ snapshots:
     dependencies:
       '@types/ms': 2.1.0
       '@types/node': 20.17.16
+
+  '@types/lodash@4.17.15': {}
 
   '@types/methods@1.1.4': {}
 

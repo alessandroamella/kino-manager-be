@@ -1,11 +1,10 @@
-import { Body, Controller, Get, Inject, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { PurchaseService } from './purchase.service';
-import { Logger } from 'winston';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -19,21 +18,25 @@ import { CreatePurchaseDto } from './dto/create-purchase.dto';
 @UseGuards(JwtAuthGuard, AdminGuard)
 @Controller('purchase')
 export class PurchaseController {
-  constructor(
-    private readonly purchaseService: PurchaseService,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+  constructor(private readonly purchaseService: PurchaseService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all purchases' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Limit the number of purchases returned',
+  })
   @ApiOkResponse({
     description: 'List of all purchases',
     type: [GetPurchaseDto],
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  async findAll() {
-    this.logger.debug('Fetching all Purchases');
-    return this.purchaseService.findAll();
+  async findAll(@Query('limit') limit?: number) {
+    return this.purchaseService.findAll(
+      !Number.isNaN(+limit) ? +limit : undefined,
+    );
   }
 
   @Post()
@@ -44,7 +47,6 @@ export class PurchaseController {
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async create(@Body() dto: CreatePurchaseDto) {
-    this.logger.debug('Creating Purchase');
     return this.purchaseService.create(dto);
   }
 }

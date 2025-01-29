@@ -28,7 +28,6 @@ export class ItemDto extends BaseDocumentDto implements Item {
 
   @ApiPropertyOptional({
     description: 'Description of the item',
-    nullable: true,
   })
   @IsOptional()
   @IsString()
@@ -43,7 +42,6 @@ export class ItemDto extends BaseDocumentDto implements Item {
   @ApiProperty({
     description: 'Price of the item',
     type: Number,
-    nullable: true,
   })
   @IsNumber()
   price: number;
@@ -51,9 +49,8 @@ export class ItemDto extends BaseDocumentDto implements Item {
   @ApiPropertyOptional({
     description: 'Cost of the item',
     type: Number,
-    nullable: true,
   })
   @IsOptional()
   @IsNumber()
-  cost: number | null;
+  cost: number | null = 0;
 }

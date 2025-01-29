@@ -17,7 +17,6 @@ export class CategoryDto extends BaseDocumentDto implements Category {
 
   @ApiPropertyOptional({
     description: 'Description of the category',
-    nullable: true,
   })
   @IsOptional()
   @IsString()
