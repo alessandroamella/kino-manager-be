@@ -84,9 +84,9 @@ model Purchase {
 }
 
 model PurchasedItem {
-  purchase   Purchase @relation(fields: [purchaseId], references: [id])
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   purchaseId Int
-  item       Item     @relation(fields: [itemId], references: [id])
+  item       Item     @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   itemId     Int
   quantity   Int      @default(1)
 
