@@ -25,6 +25,7 @@ import { IstatService } from 'istat/istat.service';
 import CodiceFiscale from 'codice-fiscale-js';
 import { R2Service } from 'r2/r2.service';
 import { v4 as uuidv4 } from 'uuid';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,7 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly istatService: IstatService,
     private readonly r2Service: R2Service,
+    private readonly config: ConfigService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -80,7 +82,9 @@ export class AuthService {
     signatureB64: string,
     codiceFiscale?: string,
   ): Promise<string> {
-    const signatureR2Key = `signatures/${formatDate(
+    const signatureR2Key = `${this.config.get(
+      'R2_SIGNATURES_FOLDER',
+    )}/${formatDate(
       new Date(),
       'yyyy-MM-dd_HH-mm-ss',
     )}_${codiceFiscale || uuidv4()}`;
@@ -91,7 +95,7 @@ export class AuthService {
         contentType: 'image/webp',
       });
       this.logger.debug(`Signature uploaded to R2 with key ${signatureR2Key}`);
-      return signatureR2Key; // Return the key for later use
+      return signatureR2Key;
     } catch (err) {
       this.logger.error(`Failed to upload signature to R2: ${err}`);
       throw new InternalServerErrorException('Failed to upload signature');

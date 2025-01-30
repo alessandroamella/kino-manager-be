@@ -102,6 +102,7 @@ import { R2Module } from './r2/r2.module';
         NODE_ENV: Joi.string()
           .valid('development', 'staging', 'production')
           .default('development'),
+        R2_SIGNATURES_FOLDER: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         COOKIE_SECRET: Joi.string().required(),
         MJ_APIKEY_PUBLIC: Joi.string().required(),

@@ -1,5 +1,6 @@
 import {
   registerDecorator,
+  ValidationArguments,
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
@@ -25,8 +26,14 @@ class IsBase64WebPConstraint implements ValidatorConstraintInterface {
     return base64Pattern.test(base64Data);
   }
 
-  defaultMessage(): string {
-    return 'The value must be a valid Base64-encoded WebP image.';
+  defaultMessage(args?: ValidationArguments): string {
+    return `The value must be a valid Base64-encoded WebP image (current: ${`${
+      typeof args?.value === 'string'
+        ? `${args.value.substring(0, 20)}...${args.value.substring(
+            args.value.length - 20,
+          )}`
+        : args?.value
+    }`})`;
   }
 }
 
