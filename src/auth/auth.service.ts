@@ -159,9 +159,12 @@ export class AuthService {
       .sendEmail(
         { email, name: data.firstName },
         'Benvenuto al Kinó Café',
-        await readFile(join(process.cwd(), 'emails/new-account.ejs'), {
-          encoding: 'utf-8',
-        }),
+        await readFile(
+          join(process.cwd(), 'resources/emails/new-account.ejs'),
+          {
+            encoding: 'utf-8',
+          },
+        ),
         {
           firstName: data.firstName,
           createdAt: format(new Date(), 'dd MMM yyyy', { locale: it }),
