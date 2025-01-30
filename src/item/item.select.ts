@@ -1,6 +1,7 @@
 export const itemSelect = {
   id: true,
   name: true,
+  nameShort: true,
   description: true,
   price: true,
   imageUrl: true,

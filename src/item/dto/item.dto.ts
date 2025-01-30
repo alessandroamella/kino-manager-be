@@ -14,6 +14,11 @@ export class ItemDto extends BaseDocumentDto implements Item {
   @IsString()
   name: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  nameShort: string | null;
+
   @ApiProperty({
     description: 'If the item is public',
     default: true,

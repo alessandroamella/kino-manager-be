@@ -62,6 +62,7 @@ model Category {
 model Item {
   id          Int             @id @default(autoincrement())
   name        String
+  nameShort   String?
   description String?
   price       Float
   imageUrl    String? // for the cashier

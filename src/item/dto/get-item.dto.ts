@@ -6,6 +6,7 @@ import { ItemDto } from './item.dto';
 export class GetItemDto extends PickType(ItemDto, [
   'id',
   'name',
+  'nameShort',
   'description',
   'price',
   'imageUrl',
