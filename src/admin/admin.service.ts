@@ -207,21 +207,6 @@ export class AdminService {
     const member = await this.prisma.member.findUnique({
       where: {
         id: userId,
-        NOT: [
-          {
-            birthComune: null,
-            streetName: null,
-            streetNumber: null,
-            postalCode: null,
-            city: null,
-            province: null,
-            country: null,
-            codiceFiscale: null,
-            birthProvince: null,
-            memberSince: null,
-            membershipCardNumber: null,
-          },
-        ],
       },
     });
     if (!member) {
@@ -229,6 +214,30 @@ export class AdminService {
         'Member not found or member data incomplete',
       );
     }
+
+    const keys = [
+      'birthComune',
+      'streetName',
+      'streetNumber',
+      'postalCode',
+      'city',
+      'province',
+      'country',
+      'codiceFiscale',
+      'birthProvince',
+      'memberSince',
+      'membershipCardNumber',
+      'signatureR2Key',
+    ];
+    if (keys.some((e) => member[e] === null || member[e] === '')) {
+      this.logger.debug(
+        `Member data incomplete for member ${member.id}, cannot generate PDF`,
+      );
+      throw new BadRequestException(
+        'Member data incomplete, cannot generate PDF',
+      );
+    }
+
     return this.membershipPdfService.generatePdf({
       firstName: member.firstName!,
       lastName: member.lastName!,
