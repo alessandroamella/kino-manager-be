@@ -1,5 +1,5 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { IsBase64WebP } from 'auth/is-b64-webp.validator';
+import { IsBase64Image } from 'auth/is-b64-image.validator';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { MemberDto } from 'member/dto/member.dto';
 
@@ -29,6 +29,6 @@ export class SignupDto extends PickType(MemberDto, [
   })
   @IsString()
   @IsNotEmpty()
-  @IsBase64WebP()
+  @IsBase64Image()
   signatureB64: string;
 }
