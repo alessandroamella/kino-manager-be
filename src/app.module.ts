@@ -113,6 +113,7 @@ import { R2Module } from './r2/r2.module';
         R2_ACCESS_KEY_ID: Joi.string().required(),
         R2_SECRET_ACCESS_KEY: Joi.string().required(),
         R2_BUCKET_NAME: Joi.string().required(),
+        SOCKET_IO_PORT: Joi.number().integer().required(),
       }),
     }),
     AuthModule,

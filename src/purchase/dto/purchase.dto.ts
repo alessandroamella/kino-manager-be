@@ -8,6 +8,7 @@ import {
   ArrayMinSize,
   IsEnum,
   Min,
+  ValidateIf,
 } from 'class-validator';
 import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
 import { PurchasedItemDto } from './purchased-item.dto';
@@ -29,16 +30,24 @@ export class PurchaseDto extends BaseDocumentDto implements Purchase {
   })
   @IsOptional()
   @IsNumber()
-  discount: number = 0;
+  discount: number;
 
   @ApiProperty({
     description: 'Total amount of the purchase',
     default: 0,
   })
-  @IsOptional()
   @IsNumber()
   @Min(0)
-  total: number = 0;
+  total: number;
+
+  @ApiProperty({
+    description: 'Amount given by the customer (used to calculate change)',
+    default: 0,
+  })
+  @ValidateIf((o) => o.paymentMethod === PaymentMethod.CASH)
+  @IsNumber()
+  @Min(0)
+  givenAmount: number;
 
   @ApiProperty()
   @IsEnum(PaymentMethod)

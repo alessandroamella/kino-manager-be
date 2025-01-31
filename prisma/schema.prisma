@@ -86,8 +86,9 @@ model Purchase {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   purchasedItems PurchasedItem[]
-  discount       Float?
+  discount       Float           @default(0)
   paymentMethod  PaymentMethod
+  givenAmount    Float
   total          Float
 }
 

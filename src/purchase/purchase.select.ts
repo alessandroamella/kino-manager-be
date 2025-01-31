@@ -13,4 +13,5 @@ export const purchaseSelect = {
   discount: true,
   paymentMethod: true,
   total: true,
+  givenAmount: true,
 };
