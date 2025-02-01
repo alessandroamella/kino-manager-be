@@ -19,7 +19,6 @@ import { PaymentMethod } from '@prisma/client';
 import { formatInTimeZone } from 'date-fns-tz';
 
 @WebSocketGateway(parseInt(process.env.SOCKET_IO_PORT), {
-  namespace: '/purchase',
   cors: {
     origin: '*', // Adjust this in production for security. Allow all origins for now.
     methods: ['GET', 'POST'],
