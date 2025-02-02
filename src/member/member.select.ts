@@ -28,4 +28,6 @@ export const memberSelectExtended = {
   city: true,
   province: true,
   country: true,
+  userAgent: true,
+  ipAddress: true,
 };

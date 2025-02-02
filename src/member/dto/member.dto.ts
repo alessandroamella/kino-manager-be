@@ -170,4 +170,12 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @ApiPropertyOptional()
   @IsString()
   resetPwdJwt: string | null;
+
+  @ApiPropertyOptional()
+  @IsString()
+  userAgent: string | null;
+
+  @ApiPropertyOptional()
+  @IsString()
+  ipAddress: string | null;
 }

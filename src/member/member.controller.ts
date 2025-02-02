@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Ip,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -25,8 +33,8 @@ export class MemberController {
   })
   @ApiOkResponse({ description: 'User data', type: MemberDataDto })
   @Get('me')
-  async getMe(@Req() req: Request) {
-    return this.memberService.getMember(+req.user!.userId);
+  async getMe(@Req() req: Request, @Ip() ip: string) {
+    return this.memberService.getMember(+req.user!.userId, req.headers, ip);
   }
 
   // TODO: remove when all users have signature

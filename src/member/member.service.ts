@@ -11,6 +11,7 @@ import { Logger } from 'winston';
 import { memberSelect } from './member.select';
 import { MemberDataWithTokenDto } from './dto/member-data-with-token.dto';
 import { AuthService } from 'auth/auth.service';
+import { IncomingHttpHeaders } from 'http';
 
 @Injectable()
 export class MemberService {
@@ -20,7 +21,11 @@ export class MemberService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async getMember(id: number): Promise<MemberDataWithTokenDto> {
+  async getMember(
+    id: number,
+    headers?: IncomingHttpHeaders,
+    ip?: string,
+  ): Promise<MemberDataWithTokenDto> {
     this.logger.debug(`Getting member with id ${id}`);
     const member = await this.prisma.member.findUnique({
       where: { id },
@@ -34,6 +39,20 @@ export class MemberService {
       email: member.email,
       isAdmin: member.isAdmin,
     });
+
+    const ua = headers['user-agent'];
+    if (ua || ip) {
+      this.logger.debug(`User with id ${id} logged in from ${ip} with ${ua}`);
+      await this.prisma.member.update({
+        where: { id },
+        data: {
+          // || undefined to not overwrite if val is nullish and was already set
+          userAgent: ua || undefined,
+          ipAddress: ip || undefined,
+        },
+      });
+    }
+
     return {
       ...member,
       accessToken: access_token,

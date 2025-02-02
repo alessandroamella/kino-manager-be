@@ -15,6 +15,8 @@ import { memberSelect, memberSelectExtended } from 'member/member.select';
 import { AddMembershipCardDto } from './dto/add-membership-card.dto';
 import { MembershipPdfService } from 'membership-pdf/membership-pdf.service';
 import { R2Service } from 'r2/r2.service';
+import { UAParser } from 'ua-parser-js';
+import { omitBy, isNil } from 'lodash';
 
 @Injectable()
 export class AdminService {
@@ -147,11 +149,30 @@ export class AdminService {
   }
 
   async getUsers(): Promise<MemberDataExtendedDto[]> {
-    return this.prisma.member.findMany({
+    const users = await this.prisma.member.findMany({
       select: memberSelectExtended,
       orderBy: {
         createdAt: 'asc',
       },
+    });
+    return users.map(({ userAgent, ...user }) => {
+      if (userAgent) {
+        const uaResult = new UAParser(userAgent).getResult();
+        return {
+          ...user,
+          deviceInfo: omitBy(
+            {
+              browser: uaResult.browser.name,
+              cpu: uaResult.cpu.architecture,
+              device: uaResult.device.model && uaResult.device.toString(),
+              mobile: uaResult.device.is('mobile'),
+              os: uaResult.os.name,
+            },
+            isNil,
+          ),
+        };
+      }
+      return { ...user, deviceInfo: null };
     });
   }
 
