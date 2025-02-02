@@ -1,7 +1,5 @@
 # Termini e Condizioni
 
-Todo!
-
 **Premessa**
 
 Lo spazio denominato Kinó Café (di seguito "Kinó Campus") è concesso in uso a diverse associazioni culturali e organizzazioni non-profit per lo svolgimento delle loro attività. Il Centro Culturale Almo (di seguito "Almo"), raggiungibile tramite il link [Almo](https://www.instagram.com/centroculturalealmo/), è una delle associazioni che usufruisce di tale spazio.

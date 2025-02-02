@@ -42,6 +42,7 @@ export class MemberDto extends BaseDocumentDto implements Member {
   gender: Gender;
 
   @ApiProperty()
+  @Transform(({ value }) => value.trim())
   @IsString()
   @IsNotEmpty()
   @IsStrongPassword({
@@ -165,4 +166,8 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @ApiProperty({ default: false })
   @IsBoolean()
   isAdmin: boolean;
+
+  @ApiPropertyOptional()
+  @IsString()
+  resetPwdJwt: string | null;
 }

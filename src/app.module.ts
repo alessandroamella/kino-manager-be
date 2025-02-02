@@ -114,6 +114,15 @@ import { R2Module } from './r2/r2.module';
         R2_SECRET_ACCESS_KEY: Joi.string().required(),
         R2_BUCKET_NAME: Joi.string().required(),
         SOCKET_IO_PORT: Joi.number().integer().required(),
+        FRONTEND_URL: Joi.string()
+          .required()
+          .custom((value) => {
+            // remove trailing slash
+            if (value.endsWith('/')) {
+              return value.slice(0, -1);
+            }
+            return value;
+          }),
       }),
     }),
     AuthModule,

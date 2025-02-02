@@ -19,7 +19,7 @@ model Member {
   firstName            String
   lastName             String
   gender               Gender          @default(X)
-  email                String
+  email                String          @unique
   password             String
   codiceFiscale        String? // null if birthCountry is not 'IT'
   address              String // to be split into address components
@@ -38,6 +38,7 @@ model Member {
   membershipCard       MembershipCard? @relation(fields: [membershipCardNumber], references: [number])
   membershipCardNumber Int?            @unique
   memberSince          DateTime?
+  resetPwdJwt          String?
   isAdmin              Boolean         @default(false)
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt

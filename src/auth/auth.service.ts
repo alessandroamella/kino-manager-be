@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -18,7 +19,7 @@ import { AccessTokenDto } from './dto/access-token.dto';
 import { MailService } from 'mail/mail.service';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { format, formatDate } from 'date-fns';
+import { addMinutes, format, formatDate, isBefore } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { JwtPayload } from './dto/jwt-payload.type';
 import { memberSelect } from 'member/member.select';
@@ -28,6 +29,8 @@ import { R2Service } from 'r2/r2.service';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigService } from '@nestjs/config';
 import sharp from 'sharp';
+import { ForgotPwdDto } from './dto/forgot-pwd.dto';
+import { ResetPwdDto } from './dto/reset-pwd.dto';
 
 @Injectable()
 export class AuthService {
@@ -71,7 +74,10 @@ export class AuthService {
 
   async generateAccessToken(data: JwtPayload): Promise<AccessTokenDto> {
     return {
-      access_token: this.jwtService.sign(data),
+      access_token: this.jwtService.sign(data, {
+        secret: this.config.get('JWT_SECRET'),
+        expiresIn: '1h',
+      }),
     };
   }
 
@@ -140,7 +146,134 @@ export class AuthService {
     }
   }
 
-  async signup(_data: SignupDto) {
+  async forgotPassword({ email }: ForgotPwdDto): Promise<HttpStatus.OK> {
+    const member = await this.prisma.member.findFirst({
+      where: { email },
+      select: { id: true, resetPwdJwt: true },
+    });
+    if (!member) {
+      throw new UnauthorizedException('Email not found');
+    }
+
+    // try to parse jwt to check if it's valid
+    if (member.resetPwdJwt) {
+      try {
+        this.logger.debug(
+          `Verifying reset password "${member.resetPwdJwt}" token for ${email}`,
+        );
+        const data = await this.jwtService.verify(member.resetPwdJwt, {
+          secret: this.config.get('JWT_SECRET'),
+        });
+        this.logger.debug(
+          `Reset password token still valid for ${email}: ${JSON.stringify(
+            data,
+          )}`,
+        );
+        if (isBefore(new Date(), addMinutes(new Date(data.iat * 1000), 5))) {
+          // token was issued less than 5 minutes ago, prevent spam
+          this.logger.debug(
+            `Token issued less than 5 minutes ago for ${email}`,
+          );
+          return HttpStatus.OK;
+        }
+      } catch (err) {
+        // check if expired
+        if (err.name === 'TokenExpiredError') {
+          // ok, expired token
+          this.logger.debug(`Reset password token expired for ${email}`);
+        } else {
+          this.logger.error(`Error verifying reset password token: ${err}`);
+          throw new InternalServerErrorException('Failed to verify token');
+        }
+      }
+    } else {
+      this.logger.debug(`No reset password token found for ${email}`);
+    }
+
+    const resetPwdJwt = this.jwtService.sign({ email }, { expiresIn: '1h' });
+    this.logger.debug(`Generated reset password token for ${email}`);
+
+    const updatedMember = await this.prisma.member.update({
+      where: { id: member.id },
+      data: { resetPwdJwt },
+      select: {
+        firstName: true,
+        updatedAt: true,
+      },
+    });
+
+    this.mailService
+      .sendEmail(
+        { name: updatedMember.firstName, email },
+        'Reimposta la tua password',
+        await readFile(join(process.cwd(), 'resources/emails/reset-pwd.ejs'), {
+          encoding: 'utf-8',
+        }),
+        {
+          firstName: updatedMember.firstName,
+          createdAt: format(updatedMember.updatedAt, 'dd MMM yyyy', {
+            locale: it,
+          }),
+          resetUrl: `${this.config.get(
+            'FRONTEND_URL',
+          )}/auth/reset-password?token=${resetPwdJwt}`,
+        },
+      )
+      .then(() => {
+        this.logger.info(`Reset password email sent to ${email}`);
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Error sending reset password email to ${email}: ${error}`,
+        );
+      });
+
+    return HttpStatus.OK;
+  }
+
+  async resetPassword({ token, password }: ResetPwdDto): Promise<ForgotPwdDto> {
+    let email: string;
+    try {
+      const data = await this.jwtService.verify(token, {
+        secret: this.config.get('JWT_SECRET'),
+      });
+      email = data.email;
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        this.logger.debug(`Reset password token expired for ${email}`);
+        throw new UnauthorizedException('Token expired');
+      } else {
+        this.logger.error(`Error verifying reset password token: ${err}`);
+        throw new InternalServerErrorException('Failed to verify token');
+      }
+    }
+
+    const member = await this.prisma.member.findFirst({
+      where: { email },
+      select: { id: true, resetPwdJwt: true },
+    });
+    if (!member) {
+      this.logger.warn(`Member not found in resetPassword for email ${email}`);
+      throw new UnauthorizedException('Email not found');
+    } else if (member.resetPwdJwt !== token) {
+      this.logger.debug(
+        `Invalid reset password token for email ${email}: ${member.resetPwdJwt} !== provided ${token}`,
+      );
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await this.prisma.member.update({
+      where: { email },
+      data: { password: hashedPassword },
+    });
+
+    this.logger.info(`Password reset for ${email}`);
+
+    return { email };
+  }
+
+  async signup(_data: SignupDto): Promise<AccessTokenDto> {
     const { signatureB64, ...data } = _data;
 
     const exists = await this.prisma.member.findFirst({
