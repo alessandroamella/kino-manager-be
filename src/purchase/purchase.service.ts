@@ -17,8 +17,10 @@ import { ItemDto } from 'item/dto/item.dto';
 import unidecode from 'unidecode';
 import { PaymentMethod } from '@prisma/client';
 import { formatInTimeZone } from 'date-fns-tz';
+import { Workbook } from 'exceljs';
 
 @WebSocketGateway(parseInt(process.env.SOCKET_IO_PORT), {
+  namespace: '/purchase',
   cors: {
     origin: '*', // Adjust this in production for security. Allow all origins for now.
     methods: ['GET', 'POST'],
@@ -118,6 +120,119 @@ export class PurchaseService
       },
       take: limit,
     });
+  }
+  async generatePurchaseReport(): Promise<Buffer> {
+    this.logger.debug('Generating purchase report');
+
+    const purchases = await this.findAll();
+    const items = await this.prisma.item.findMany({
+      // Fetch items directly using Prisma
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    const itemMap: Map<number, string> = new Map();
+    items.forEach((item) => {
+      itemMap.set(item.id, item.name);
+    });
+
+    const purchaseSheetData = purchases.map((purchase) => {
+      const purchasedItemsDescription = purchase.purchasedItems
+        .map(
+          (purchasedItem) =>
+            `${itemMap.get(purchasedItem.itemId) || 'Articolo Sconosciuto'} x ${
+              purchasedItem.quantity
+            }`,
+        )
+        .join(', ');
+
+      return {
+        ID: purchase.id,
+        Data: purchase.purchaseDate,
+        'Metodo di Pagamento': purchase.paymentMethod,
+        Sconto: purchase.discount,
+        Totale: purchase.total,
+        'Importo Dato': purchase.givenAmount,
+        'Articoli Acquistati': purchasedItemsDescription,
+      };
+    });
+
+    const itemsSoldDataMap: Map<string, number> = new Map();
+    purchases.forEach((purchase) => {
+      purchase.purchasedItems.forEach((purchasedItem) => {
+        const itemName =
+          itemMap.get(purchasedItem.itemId) || 'Articolo Sconosciuto';
+        const currentQuantity = itemsSoldDataMap.get(itemName) || 0;
+        itemsSoldDataMap.set(
+          itemName,
+          currentQuantity + purchasedItem.quantity,
+        );
+      });
+    });
+
+    const itemsSoldSheetData = Array.from(itemsSoldDataMap.entries()).map(
+      ([itemName, quantity]) => ({
+        'Nome Articolo': itemName,
+        'Quantità Totale Venduta': quantity,
+      }),
+    );
+
+    const workbook = new Workbook(); // Create workbook directly
+    const purchaseSheet = workbook.addWorksheet('Acquisti');
+    const itemsSoldSheet = workbook.addWorksheet('Articoli Venduti');
+
+    // Purchases Sheet Headers
+    purchaseSheet.columns = [
+      { header: 'ID', key: 'ID', width: 10 },
+      {
+        header: 'Data',
+        key: 'Data',
+        width: 20,
+        style: { numFmt: 'yyyy-mm-dd hh:mm:ss' },
+      },
+      { header: 'Metodo di Pagamento', key: 'Metodo di Pagamento', width: 15 },
+      {
+        header: 'Sconto',
+        key: 'Sconto',
+        width: 10,
+        style: { numFmt: '#,##0.00 €' },
+      },
+      {
+        header: 'Totale',
+        key: 'Totale',
+        width: 10,
+        style: { numFmt: '#,##0.00 €' },
+      },
+      {
+        header: 'Importo Dato',
+        key: 'Importo Dato',
+        width: 15,
+        style: { numFmt: '#,##0.00 €' },
+      },
+      { header: 'Articoli Acquistati', key: 'Articoli Acquistati', width: 40 },
+    ];
+
+    // Items Sold Sheet Headers
+    itemsSoldSheet.columns = [
+      { header: 'Nome Articolo', key: 'Nome Articolo', width: 30 },
+      {
+        header: 'Quantità Totale Venduta',
+        key: 'Quantità Totale Venduta',
+        width: 20,
+      },
+    ];
+
+    purchaseSheet.addRows(purchaseSheetData);
+    itemsSoldSheet.addRows(itemsSoldSheetData);
+
+    // Generate buffer
+    const excelBuffer = await workbook.xlsx.writeBuffer();
+    this.logger.debug(
+      'Excel file buffer generated successfully with Purchases and Items Sold sheets',
+    );
+    return excelBuffer as Buffer;
   }
 
   async create(data: CreatePurchaseDto): Promise<GetPurchaseDto> {

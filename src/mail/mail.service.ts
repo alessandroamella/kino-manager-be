@@ -34,7 +34,7 @@ export class MailService {
     const apiKeyPrivate = this.config.get('MJ_APIKEY_PRIVATE');
 
     if (!apiKeyPublic || !apiKeyPrivate) {
-      this.logger.error('Mailjet API keys not configured.');
+      this.logger.error('Mailjet API keys not configured');
       return false;
     }
 

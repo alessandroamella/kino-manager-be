@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import * as ExcelJS from 'exceljs';
+import { Workbook } from 'exceljs';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { I18nService } from 'nestjs-i18n';
@@ -40,7 +40,7 @@ export class AdminService {
     });
 
     if (!members || members.length === 0) {
-      this.logger.warn('No members found to export.');
+      this.logger.warn('No members found to export');
     }
 
     // Fetch Membership Cards Data
@@ -54,10 +54,10 @@ export class AdminService {
     });
 
     if (!membershipCards || membershipCards.length === 0) {
-      this.logger.warn('No membership cards found to export.');
+      this.logger.warn('No membership cards found to export');
     }
 
-    const workbook = new ExcelJS.Workbook();
+    const workbook = new Workbook();
 
     // Members Worksheet
     const membersWorksheet = workbook.addWorksheet('Members');
@@ -141,7 +141,7 @@ export class AdminService {
     // Generate buffer
     const excelBuffer = await workbook.xlsx.writeBuffer();
     this.logger.debug(
-      'Excel file buffer generated successfully with Members and Tessere sheets.',
+      'Excel file buffer generated successfully with Members and Tessere sheets',
     );
     return excelBuffer as Buffer;
   }
