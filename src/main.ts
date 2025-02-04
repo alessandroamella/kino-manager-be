@@ -13,6 +13,7 @@ import { Logger } from 'winston';
 import helmet from 'helmet';
 import { urlencoded, json, Request, Response } from 'express';
 import { Encoding } from 'node:crypto';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 const rawBodyBuffer = (
   req: RawBodyRequest<Request>,
@@ -26,7 +27,11 @@ const rawBodyBuffer = (
 };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // under nginx reverse proxy, we need to trust the proxy
+  app.set('trust proxy', true);
+
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
