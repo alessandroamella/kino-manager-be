@@ -41,8 +41,11 @@ export class MemberService {
     });
 
     const ua = headers['user-agent'];
+    const _ip = headers['x-forwarded-for'] || headers['x-real-ip'];
     if (ua || ip) {
-      this.logger.debug(`User with id ${id} logged in from ${ip} with ${ua}`);
+      this.logger.debug(
+        `User with id ${id} logged in from ${ip}, x-forwarded-for ${_ip} with userAgent "${ua}"`,
+      );
       await this.prisma.member.update({
         where: { id },
         data: {

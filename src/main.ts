@@ -13,6 +13,7 @@ import { Logger } from 'winston';
 import helmet from 'helmet';
 import { urlencoded, json, Request, Response } from 'express';
 import { Encoding } from 'node:crypto';
+import rateLimit from 'express-rate-limit';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 const rawBodyBuffer = (
@@ -80,6 +81,13 @@ async function bootstrap() {
 
     loggerService.info(`Swagger is running on ${host}:${port}/api`);
   }
+
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 1000, // limit each IP to 1000 requests per windowMs
+    }),
+  );
 
   loggerService.info('NODE_ENV set to ' + nodeEnvironment);
 
