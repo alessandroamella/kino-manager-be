@@ -34,7 +34,6 @@ export class MemberController {
   @ApiOkResponse({ description: 'User data', type: MemberDataDto })
   @Get('me')
   async getMe(@Req() req: Request, @Ip() ip: string) {
-    console.log(req.headers);
     return this.memberService.getMember(+req.user!.userId, req.headers, ip);
   }
 
