@@ -7,6 +7,7 @@ import { render } from 'ejs';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { addMinutes, subMinutes } from 'date-fns';
+import wait from 'wait';
 
 @Injectable()
 export class NewsletterService {
@@ -139,6 +140,9 @@ export class NewsletterService {
               },
             });
           }
+
+          // add a delay between sending emails to avoid rate limiting
+          await wait(1000);
         }
         this.logger.info(
           `Newsletter ${newsletter.id} sending process completed`,

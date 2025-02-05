@@ -70,6 +70,8 @@
     "ua-parser-js": "^2.0.1",
     "unidecode": "^1.1.0",
     "uuid": "^11.0.5",
+    "wait": "^0.4.2",
+    "want": "^0.0.0",
     "winston": "^3.17.0"
   },
   "devDependencies": {

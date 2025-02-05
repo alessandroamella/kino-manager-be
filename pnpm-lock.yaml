@@ -155,6 +155,12 @@ importers:
       uuid:
         specifier: ^11.0.5
         version: 11.0.5
+      wait:
+        specifier: ^0.4.2
+        version: 0.4.2
+      want:
+        specifier: ^0.0.0
+        version: 0.0.0
       winston:
         specifier: ^3.17.0
         version: 3.17.0
@@ -4155,8 +4161,15 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
+  wait@0.4.2:
+    resolution: {integrity: sha512-g4Uu25y9MJ3jtBcrRDDXeI/f7lBNtVmNUM3Xd78S19tm1gZutDkL/f6UEcMi/NqWvKZ74Mhrb+4LwpYbjG6XYA==}
+    hasBin: true
+
   walker@1.0.8:
     resolution: {integrity: sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==}
+
+  want@0.0.0:
+    resolution: {integrity: sha512-4qsGbBMuGqrS20VmTqzdrZkAwdR+haDjsnU6BDmMAWHiBxRn+lwOZreW8QP4Njh9mZ38YdFJWFgojyi/V+Kj9g==}
 
   watchpack@2.4.2:
     resolution: {integrity: sha512-TnbFSbcOCcDgjZ4piURLCbJ3nJhznVh9kw6F6iokjiFPl8ONxe9A6nMDVXDiNbrSfLILs6vB07F7wLBrwPYzJw==}
@@ -9133,9 +9146,15 @@ snapshots:
 
   vary@1.1.2: {}
 
+  wait@0.4.2: {}
+
   walker@1.0.8:
     dependencies:
       makeerror: 1.0.12
+
+  want@0.0.0:
+    dependencies:
+      esprima: 4.0.1
 
   watchpack@2.4.2:
     dependencies:
