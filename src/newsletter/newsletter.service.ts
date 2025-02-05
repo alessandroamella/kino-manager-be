@@ -142,7 +142,7 @@ export class NewsletterService {
           }
 
           // add a delay between sending emails to avoid rate limiting
-          await wait(1000);
+          await wait(500);
         }
         this.logger.info(
           `Newsletter ${newsletter.id} sending process completed`,
