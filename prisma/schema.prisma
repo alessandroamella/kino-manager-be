@@ -14,36 +14,77 @@ enum Gender {
   X
 }
 
+enum SubscriptionStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+}
+
+model Newsletter {
+  id          Int                  @id @default(autoincrement())
+  subject     String
+  ejsString   String               @db.Text // member will be injected in ejs
+  scheduledAt DateTime
+  status      DeliveryStatus       @default(PENDING) // Initially pending until sending starts
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  deliveries  NewsletterDelivery[]
+}
+
 model Member {
-  id                   Int             @id @default(autoincrement())
-  firstName            String
-  lastName             String
-  gender               Gender          @default(X)
-  email                String          @unique
-  password             String
-  codiceFiscale        String? // null if birthCountry is not 'IT'
-  address              String // to be split into address components
-  streetName           String?
-  streetNumber         Int?
-  postalCode           String?
-  city                 String?
-  province             String?
-  country              String?
-  phoneNumber          String
-  birthDate            DateTime
-  signatureR2Key       String
-  birthCountry         String // alpha-2 code
-  birthComune          String? // null if birthCountry is not 'IT'
-  birthProvince        String? // null if birthCountry is not 'IT'
-  membershipCard       MembershipCard? @relation(fields: [membershipCardNumber], references: [number])
-  membershipCardNumber Int?            @unique
-  memberSince          DateTime?
-  resetPwdJwt          String?
-  userAgent            String?
-  ipAddress            String?
-  isAdmin              Boolean         @default(false)
-  createdAt            DateTime        @default(now())
-  updatedAt            DateTime        @updatedAt
+  id                           Int                  @id @default(autoincrement())
+  firstName                    String
+  lastName                     String
+  gender                       Gender               @default(X)
+  email                        String               @unique
+  password                     String
+  codiceFiscale                String? // null if birthCountry is not 'IT'
+  address                      String // to be split into address components
+  streetName                   String?
+  streetNumber                 Int?
+  postalCode                   String?
+  city                         String?
+  province                     String?
+  country                      String?
+  phoneNumber                  String
+  birthDate                    DateTime
+  signatureR2Key               String
+  birthCountry                 String // alpha-2 code
+  birthComune                  String? // null if birthCountry is not 'IT'
+  birthProvince                String? // null if birthCountry is not 'IT'
+  membershipCard               MembershipCard?      @relation(fields: [membershipCardNumber], references: [number])
+  membershipCardNumber         Int?                 @unique
+  memberSince                  DateTime?
+  resetPwdJwt                  String?
+  userAgent                    String?
+  ipAddress                    String?
+  isAdmin                      Boolean              @default(false)
+  createdAt                    DateTime             @default(now())
+  updatedAt                    DateTime             @updatedAt
+  newsletterSubscriptionStatus SubscriptionStatus   @default(SUBSCRIBED)
+  newsletterSubscribedAt       DateTime             @default(now())
+  newsletterUnsubscribedAt     DateTime?
+  newsletterDeliveries         NewsletterDelivery[]
+}
+
+model NewsletterDelivery {
+  id           Int            @id @default(autoincrement())
+  newsletter   Newsletter     @relation(fields: [newsletterId], references: [id])
+  newsletterId Int
+  member       Member         @relation(fields: [memberId], references: [id])
+  memberId     Int
+  sentAt       DateTime?
+  status       DeliveryStatus @default(PENDING) // Initially pending until sending starts
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([newsletterId, memberId])
 }
 
 model MembershipCard {

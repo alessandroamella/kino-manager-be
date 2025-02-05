@@ -18,6 +18,7 @@ export const memberSelect = {
   isAdmin: true,
   createdAt: true,
   updatedAt: true,
+  newsletterSubscriptionStatus: true,
 } as const;
 
 export const memberSelectExtended = {
@@ -30,4 +31,6 @@ export const memberSelectExtended = {
   country: true,
   userAgent: true,
   ipAddress: true,
+  newsletterSubscribedAt: true,
+  newsletterUnsubscribedAt: true,
 };

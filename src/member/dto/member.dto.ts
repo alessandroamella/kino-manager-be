@@ -15,7 +15,7 @@ import {
   IsEnum,
   IsUrl,
 } from 'class-validator';
-import { Gender, Member } from '@prisma/client';
+import { Gender, Member, SubscriptionStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
 import { IsCodiceFiscale } from 'member/is-codice-fiscale.decorator';
@@ -178,4 +178,19 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @ApiPropertyOptional()
   @IsString()
   ipAddress: string | null;
+
+  @ApiProperty()
+  @IsEnum(SubscriptionStatus)
+  newsletterSubscriptionStatus: SubscriptionStatus;
+
+  @ApiProperty()
+  @Type(() => Date)
+  @IsDate()
+  newsletterSubscribedAt: Date;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  newsletterUnsubscribedAt: Date | null;
 }

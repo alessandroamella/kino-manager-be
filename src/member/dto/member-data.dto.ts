@@ -48,4 +48,6 @@ export class MemberDataDto extends OmitType(MemberDataExtendedDto, [
   'country',
   'ipAddress',
   'deviceInfo',
+  'newsletterSubscribedAt',
+  'newsletterUnsubscribedAt',
 ]) {}

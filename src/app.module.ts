@@ -24,6 +24,8 @@ import { ItemModule } from './item/item.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { MembershipPdfModule } from './membership-pdf/membership-pdf.module';
 import { R2Module } from './r2/r2.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -33,6 +35,7 @@ import { R2Module } from './r2/r2.module';
       rootPath: path.join(__dirname, '..', 'public'),
       serveRoot: '/v1/static',
     }),
+    ScheduleModule.forRoot(),
     WinstonModule.forRoot({
       transports: [
         new winston.transports.Console({
@@ -138,6 +141,7 @@ import { R2Module } from './r2/r2.module';
     PurchaseModule,
     MembershipPdfModule,
     R2Module,
+    NewsletterModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],
