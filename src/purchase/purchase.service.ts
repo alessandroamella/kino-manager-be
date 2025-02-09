@@ -22,7 +22,7 @@ import { Workbook } from 'exceljs';
 @WebSocketGateway(parseInt(process.env.SOCKET_IO_PORT), {
   namespace: '/purchase',
   cors: {
-    origin: '*', // Adjust this in production for security. Allow all origins for now.
+    origin: '*',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -106,7 +106,7 @@ export class PurchaseService
     this.logger.debug(
       `Emitting 'purchase-created' event with data: ${JSON.stringify(unidecoded)}`,
     );
-    this.server.emit('purchase-created', mappedData);
+    this.server.emit('purchase-created', unidecoded);
   }
 
   async findAll(limit?: number): Promise<GetPurchaseDto[]> {
