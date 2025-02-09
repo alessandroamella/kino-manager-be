@@ -6,3 +6,8 @@
 4. `NODE_ENV`, `JWT_SECRET`, `COOKIE_SECRET`, `R2_SIGNATURES_FOLDER`.
 5. `pnpm install`, `pnpx prisma migrate deploy`, `pnpm dev` e via.
 6. Per prod: `pnpm build` e `pnpm start`.
+
+## Note
+
+- Se stai usando il PC della cassa, per stampare gli scontrini, puoi usare lo [script in Python qui](https://github.com/alessandroamella/kino-manager-printer) per connetterti al server socket.io.
+- Trovi il [frontend qui](https://github.com/alessandroamella/kino-manager-fe).
