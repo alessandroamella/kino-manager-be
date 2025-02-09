@@ -94,7 +94,7 @@ export class PurchaseService
     const unidecoded = cloneDeepWith(mappedData, (value, key) => {
       console.log('key', key, 'value', value);
       if (typeof value === 'string') {
-        return unidecode(value); // convert unicode characters to ASCII
+        return unidecode(value).trim(); // convert unicode characters to ASCII
       } else if (typeof value === 'number') {
         // round amounts to 2 decimal places, Italian decimal separator
         return value
