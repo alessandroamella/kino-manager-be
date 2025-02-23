@@ -26,6 +26,7 @@ import { MembershipPdfModule } from './membership-pdf/membership-pdf.module';
 import { R2Module } from './r2/r2.module';
 import { NewsletterModule } from './newsletter/newsletter.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
   imports: [
@@ -142,6 +143,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     MembershipPdfModule,
     R2Module,
     NewsletterModule,
+    AttendanceModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],

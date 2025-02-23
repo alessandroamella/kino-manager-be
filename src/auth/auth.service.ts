@@ -36,7 +36,7 @@ import { ResetPwdDto } from './dto/reset-pwd.dto';
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
-    private jwtService: JwtService,
+    private readonly jwtService: JwtService,
     private readonly mailService: MailService,
     private readonly istatService: IstatService,
     private readonly r2Service: R2Service,
@@ -74,7 +74,7 @@ export class AuthService {
 
   async generateAccessToken(data: JwtPayload): Promise<AccessTokenDto> {
     return {
-      access_token: this.jwtService.sign(data, {
+      access_token: await this.jwtService.signAsync(data, {
         secret: this.config.get('JWT_SECRET'),
         expiresIn: '1h',
       }),
@@ -161,7 +161,9 @@ export class AuthService {
         this.logger.debug(
           `Verifying reset password "${member.resetPwdJwt}" token for ${email}`,
         );
-        const data = await this.jwtService.verify(member.resetPwdJwt, {
+        const data = await this.jwtService.verifyAsync<
+          ForgotPwdDto & { iat: number }
+        >(member.resetPwdJwt, {
           secret: this.config.get('JWT_SECRET'),
         });
         this.logger.debug(
@@ -190,7 +192,10 @@ export class AuthService {
       this.logger.debug(`No reset password token found for ${email}`);
     }
 
-    const resetPwdJwt = this.jwtService.sign({ email }, { expiresIn: '1h' });
+    const resetPwdJwt = await this.jwtService.signAsync(
+      { email },
+      { expiresIn: '1h' },
+    );
     this.logger.debug(`Generated reset password token for ${email}`);
 
     const updatedMember = await this.prisma.member.update({
@@ -234,7 +239,7 @@ export class AuthService {
   async resetPassword({ token, password }: ResetPwdDto): Promise<ForgotPwdDto> {
     let email: string;
     try {
-      const data = await this.jwtService.verify(token, {
+      const data = await this.jwtService.verifyAsync<ForgotPwdDto>(token, {
         secret: this.config.get('JWT_SECRET'),
       });
       email = data.email;

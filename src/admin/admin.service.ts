@@ -3,6 +3,7 @@ import {
   Inject,
   NotFoundException,
   BadRequestException,
+  HttpStatus,
 } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { Workbook } from 'exceljs';
@@ -17,6 +18,7 @@ import { MembershipPdfService } from 'membership-pdf/membership-pdf.service';
 import { R2Service } from 'r2/r2.service';
 import { UAParser } from 'ua-parser-js';
 import { omitBy, isNil } from 'lodash';
+import { AttendanceService } from 'attendance/attendance.service';
 
 @Injectable()
 export class AdminService {
@@ -24,6 +26,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly i18n: I18nService,
     private readonly membershipPdfService: MembershipPdfService,
+    private readonly attendanceService: AttendanceService,
     private readonly r2Service: R2Service,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -187,7 +190,7 @@ export class AdminService {
     });
   }
 
-  async addMembershipCard(data: AddMembershipCardDto): Promise<void> {
+  async addMembershipCard(data: AddMembershipCardDto): Promise<HttpStatus.OK> {
     const member = await this.prisma.member.findUnique({
       where: { id: data.userId },
       select: { id: true, membershipCardNumber: true },
@@ -220,6 +223,8 @@ export class AdminService {
         membershipCardNumber: true,
       },
     });
+
+    return HttpStatus.OK;
   }
 
   async generateMembershipPdf(
@@ -282,5 +287,9 @@ export class AdminService {
 
   async getSignature(signatureR2Key: string) {
     return this.r2Service.downloadFileAsStream(signatureR2Key);
+  }
+
+  async logAttendance(jwt: string): Promise<void> {
+    await this.attendanceService.logAttendance(jwt);
   }
 }

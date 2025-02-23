@@ -1,11 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsString, IsEmail } from 'class-validator';
+import { PickType } from '@nestjs/swagger';
+import { MemberDto } from 'member/dto/member.dto';
 
-export class ForgotPwdDto {
-  @ApiProperty()
-  @IsString()
-  @IsEmail()
-  @Transform(({ value }) => value.trim().toLowerCase())
-  email: string;
-}
+export class ForgotPwdDto extends PickType(MemberDto, ['email']) {}

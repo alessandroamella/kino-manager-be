@@ -7,6 +7,8 @@ import {
   Patch,
   Body,
   Param,
+  HttpCode,
+  Post,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
@@ -24,6 +26,7 @@ import { AdminGuard } from 'auth/admin.guard';
 import { MemberDataExtendedDto } from 'member/dto/member-data.dto';
 import { MembershipCardDto } from './dto/MembershipCard.dto';
 import { AddMembershipCardDto } from './dto/add-membership-card.dto';
+import { LogAttendanceDto } from 'attendance/dto/log-attendance.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -129,5 +132,15 @@ export class AdminController {
     return new StreamableFile(readable, {
       type: 'image/webp',
     });
+  }
+
+  @UseGuards(AdminGuard)
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Log member attendance' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiOkResponse({ description: 'Attendance logged' })
+  @Post('log-attendance')
+  async logAttendance(@Body() { jwt }: LogAttendanceDto): Promise<void> {
+    await this.adminService.logAttendance(jwt);
   }
 }

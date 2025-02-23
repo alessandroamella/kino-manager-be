@@ -71,6 +71,7 @@ model Member {
   newsletterSubscribedAt       DateTime             @default(now())
   newsletterUnsubscribedAt     DateTime?
   newsletterDeliveries         NewsletterDelivery[]
+  attendances                  Attendance[]
 }
 
 model NewsletterDelivery {
@@ -144,4 +145,27 @@ model PurchasedItem {
   quantity   Int      @default(1)
 
   @@id([purchaseId, itemId])
+}
+
+model OpeningDay {
+  id           Int          @id @default(autoincrement())
+  openTimeUTC  DateTime     @unique
+  closeTimeUTC DateTime
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  attendances  Attendance[]
+}
+
+model Attendance {
+  id           Int        @id @default(autoincrement())
+  member       Member     @relation(fields: [memberId], references: [id])
+  memberId     Int
+  openingDay   OpeningDay @relation(fields: [openingDayId], references: [id])
+  openingDayId Int
+  checkInUTC   DateTime
+  checkOutUTC  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([memberId, openingDayId])
 }

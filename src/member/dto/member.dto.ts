@@ -55,6 +55,7 @@ export class MemberDto extends BaseDocumentDto implements Member {
   password: string;
 
   @ApiProperty({ format: 'email' })
+  @IsString()
   @IsEmail()
   @Transform(({ value }) => value.trim().toLowerCase())
   email: string;

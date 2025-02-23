@@ -4,10 +4,11 @@ import { AdminController } from './admin.controller';
 import { PrismaModule } from 'prisma/prisma.module';
 import { MembershipPdfModule } from 'membership-pdf/membership-pdf.module';
 import { R2Module } from 'r2/r2.module';
+import { AttendanceModule } from 'attendance/attendance.module';
 
 @Module({
   providers: [AdminService],
   controllers: [AdminController],
-  imports: [PrismaModule, MembershipPdfModule, R2Module],
+  imports: [PrismaModule, MembershipPdfModule, R2Module, AttendanceModule],
 })
 export class AdminModule {}

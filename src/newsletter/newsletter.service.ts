@@ -1,4 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  HttpStatus,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service'; // Assuming your mail service is in mail/mail.service.ts
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -17,7 +22,7 @@ export class NewsletterService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async subscribe(memberId: number): Promise<void> {
+  async subscribe(memberId: number): Promise<HttpStatus.OK> {
     await this.prisma.member.update({
       where: { id: memberId },
       data: {
@@ -26,9 +31,10 @@ export class NewsletterService {
         newsletterUnsubscribedAt: null,
       },
     });
+    return HttpStatus.OK;
   }
 
-  async unsubscribe(memberId: number): Promise<void> {
+  async unsubscribe(memberId: number): Promise<HttpStatus.OK> {
     await this.prisma.member.update({
       where: { id: memberId },
       data: {
@@ -36,10 +42,11 @@ export class NewsletterService {
         newsletterUnsubscribedAt: new Date(),
       },
     });
+    return HttpStatus.OK;
   }
 
   @Cron(CronExpression.EVERY_MINUTE) // adjust cron expression as needed (e.g., EVERY_DAY_AT_8AM for daily at 8 AM)
-  async sendScheduledNewsletters(): Promise<void> {
+  async sendScheduledNewsletters() {
     this.logger.debug('Checking for scheduled newsletters..');
 
     const now = new Date();
@@ -123,7 +130,7 @@ export class NewsletterService {
               this.logger.error(
                 `No sendResult for member ${member.id} for newsletter ${newsletter.id}`,
               );
-              throw new Error(
+              throw new InternalServerErrorException(
                 `No sendResult for member ${member.id} for newsletter ${newsletter.id}`,
               );
             }

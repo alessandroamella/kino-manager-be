@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Ip,
+  ParseIntPipe,
   Post,
   Req,
   UseGuards,
@@ -19,6 +20,7 @@ import { MemberDataDto } from './dto/member-data.dto';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import { Request } from 'express';
 import { AddSignatureDto } from './dto/add-signature.dto';
+import { Member } from './member.decorator';
 
 @ApiTags('member')
 @ApiBearerAuth()
@@ -33,8 +35,12 @@ export class MemberController {
   })
   @ApiOkResponse({ description: 'User data', type: MemberDataDto })
   @Get('me')
-  async getMe(@Req() req: Request, @Ip() ip: string) {
-    return this.memberService.getMember(+req.user!.userId, req.headers, ip);
+  async getMe(
+    @Req() req: Request,
+    @Member('userId', ParseIntPipe) userId: number,
+    @Ip() ip: string,
+  ) {
+    return this.memberService.getMember(userId, req.headers, ip);
   }
 
   // TODO: remove when all users have signature
@@ -46,7 +52,10 @@ export class MemberController {
     description: 'Access token not provided, invalid or user not found',
   })
   @Post('signature')
-  async addSignature(@Req() req: Request, @Body() dto: AddSignatureDto) {
-    return this.memberService.addSignature(+req.user!.userId, dto.signatureB64);
+  async addSignature(
+    @Member('userId', ParseIntPipe) userId: number,
+    @Body() dto: AddSignatureDto,
+  ) {
+    return this.memberService.addSignature(userId, dto.signatureB64);
   }
 }

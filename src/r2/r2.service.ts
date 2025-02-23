@@ -1,4 +1,5 @@
 import {
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -64,7 +65,7 @@ export class R2Service implements OnModuleInit {
     key: string;
     body: Buffer | Uint8Array | string | ReadableStream<any>;
     contentType: string;
-  }): Promise<void> {
+  }): Promise<HttpStatus.OK> {
     this.logger.debug(
       `Uploading file "${key}" to R2 bucket "${this.bucketName}"`,
     );
@@ -89,6 +90,8 @@ export class R2Service implements OnModuleInit {
         `Failed to upload file "${key}": ${error.message}`,
       );
     }
+
+    return HttpStatus.OK;
   }
 
   async downloadFile(key: string): Promise<ReadableStream<any> | null> {
