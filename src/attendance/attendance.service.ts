@@ -78,74 +78,64 @@ export class AttendanceService {
   }
 
   async logAttendance(qrPayload: string): Promise<HttpStatus.OK> {
-    let payload: AttendanceJwtPayloadDto;
     try {
-      payload =
+      const payload =
         await this.jwtService.verifyAsync<AttendanceJwtPayloadDto>(qrPayload);
-    } catch (err) {
-      this.logger.debug(
-        `Invalid QR code in logAttendance ${qrPayload}: ${err?.message || err}`,
+      const userId = payload.u;
+      const checkInTime = new Date(payload.d * 1000);
+
+      const user = await this.prisma.member.findUnique({
+        where: { id: userId },
+        select: { id: true },
+      });
+      if (!user) {
+        this.logger.warn(`User ${userId} not found`);
+        throw new NotFoundException('User not found');
+      }
+
+      const event = await this.prisma.openingDay.findFirst({
+        where: {
+          openTimeUTC: { lte: addHours(checkInTime, 3) },
+          closeTimeUTC: { gte: subHours(checkInTime, 3) },
+        },
+        select: { id: true, openTimeUTC: true },
+      });
+      if (!event) {
+        this.logger.warn(
+          `No event found for user ${userId} at ${this.formatLogTime(checkInTime)}`,
+        );
+        throw new NotFoundException('No event found');
+      }
+
+      const existingAttendance = await this.prisma.attendance.findFirst({
+        where: { memberId: userId, openingDayId: event.id },
+      });
+      if (existingAttendance) {
+        this.logger.warn(
+          `User ${userId} already checked in at ${this.formatLogTime(checkInTime)} for event ${event.id}`,
+        );
+        return HttpStatus.OK;
+      }
+
+      await this.prisma.attendance.create({
+        data: {
+          memberId: user.id,
+          openingDayId: event.id,
+          checkInUTC: checkInTime,
+        },
+      });
+
+      this.logger.info(
+        `User ${userId} checked in at ${this.formatLogTime(checkInTime)} for event ${event.id}`,
       );
+      return HttpStatus.OK;
+    } catch (err) {
+      this.logger.debug(`Invalid QR code: ${err?.message || err}`);
       throw new UnauthorizedException('Invalid QR code');
     }
+  }
 
-    const userId = payload.u;
-    const date = new Date(payload.d * 1000);
-
-    const user = await this.prisma.member.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
-    if (!user) {
-      this.logger.warn(`User ${userId} not found in logAttendance`);
-      throw new NotFoundException('User not found');
-    }
-
-    const event = await this.prisma.openingDay.findFirst({
-      // start time - 3h <= qr scan time <= end time + 3h
-      // => start time <= qr scan time + 3h
-      // => qr scan time - 3h <= end time
-      where: {
-        openTimeUTC: {
-          lte: addHours(date, 3),
-        },
-        closeTimeUTC: {
-          gte: subHours(date, 3),
-        },
-      },
-      select: { id: true, openTimeUTC: true },
-    });
-    if (!event) {
-      this.logger.warn(
-        `No event found for user ${userId} at ${formatInTimeZone(
-          date,
-          'Europe/Rome',
-          'dd/MM/yyyy HH:mm:ss',
-        )}`,
-      );
-      throw new NotFoundException('No event found');
-    }
-
-    await this.prisma.attendance.create({
-      data: {
-        memberId: user.id,
-        openingDayId: event.id,
-        checkInUTC: date,
-      },
-    });
-
-    this.logger.info(
-      `User ${userId} checked in at ${formatInTimeZone(
-        date,
-        'Europe/Rome',
-        'dd/MM/yyyy HH:mm:ss',
-      )} with QR code for event ${event.id} (event of ${formatInTimeZone(
-        event.openTimeUTC,
-        'Europe/Rome',
-        'dd/MM/yyyy HH:mm:ss',
-      )})`,
-    );
-
-    return HttpStatus.OK;
+  private formatLogTime(date: Date): string {
+    return formatInTimeZone(date, 'Europe/Rome', 'dd/MM/yyyy HH:mm:ss');
   }
 }
