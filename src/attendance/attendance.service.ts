@@ -102,13 +102,15 @@ export class AttendanceService {
     }
 
     const event = await this.prisma.openingDay.findFirst({
+      // start time - 3h <= qr scan time <= end time + 3h
+      // => start time <= qr scan time + 3h
+      // => qr scan time - 3h <= end time
       where: {
-        // allow 3 hours before and after the event
         openTimeUTC: {
-          gte: subHours(date, 3),
+          lte: addHours(date, 3),
         },
         closeTimeUTC: {
-          lte: addHours(date, 3),
+          gte: subHours(date, 3),
         },
       },
       select: { id: true, openTimeUTC: true },
