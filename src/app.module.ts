@@ -27,6 +27,7 @@ import { R2Module } from './r2/r2.module';
 import { NewsletterModule } from './newsletter/newsletter.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AttendanceModule } from './attendance/attendance.module';
+import { OpeningDayModule } from './opening-day/opening-day.module';
 
 @Module({
   imports: [
@@ -144,6 +145,7 @@ import { AttendanceModule } from './attendance/attendance.module';
     R2Module,
     NewsletterModule,
     AttendanceModule,
+    OpeningDayModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],

@@ -103,11 +103,12 @@ export class AttendanceService {
 
     const event = await this.prisma.openingDay.findFirst({
       where: {
+        // allow 3 hours before and after the event
         openTimeUTC: {
-          gte: subHours(date, 1),
+          gte: subHours(date, 3),
         },
         closeTimeUTC: {
-          lte: addHours(date, 1),
+          lte: addHours(date, 3),
         },
       },
       select: { id: true, openTimeUTC: true },
