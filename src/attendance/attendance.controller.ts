@@ -5,6 +5,7 @@ import {
   UseGuards,
   ParseIntPipe,
   HttpCode,
+  Get,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -16,6 +17,7 @@ import {
 import { AttendanceService } from './attendance.service';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import { Member } from 'member/member.decorator';
+import { GetCheckInDto } from './dto/get-check-in.dto';
 
 @ApiTags('attendance')
 @ApiBearerAuth()
@@ -46,5 +48,15 @@ export class AttendanceController {
     return new StreamableFile(imgBuffer, {
       type: 'image/webp',
     });
+  }
+
+  @ApiOperation({ summary: 'Check in attendance' })
+  @ApiNotFoundResponse({
+    description: 'Attendance not found (not checked in) or event not found',
+  })
+  @ApiOkResponse({ description: 'Check-in result', type: GetCheckInDto })
+  @Get('is-checked-in')
+  async checkIn(@Member('userId', ParseIntPipe) userId: number): Promise<void> {
+    await this.attendanceService.getUserCheckIn(userId);
   }
 }

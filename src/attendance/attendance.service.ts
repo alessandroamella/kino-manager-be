@@ -14,6 +14,8 @@ import { addHours, getUnixTime, subHours } from 'date-fns';
 import QRCode from 'qrcode';
 import { formatInTimeZone } from 'date-fns-tz';
 import sharp from 'sharp';
+import { GetOpeningDayDto } from 'opening-day/dto/get-opening-day.dto';
+import { GetCheckInDto } from './dto/get-check-in.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -77,6 +79,16 @@ export class AttendanceService {
     }
   }
 
+  private async getClosestEvent(date: Date): Promise<GetOpeningDayDto | null> {
+    return this.prisma.openingDay.findFirst({
+      where: {
+        openTimeUTC: { lte: addHours(date, 3) },
+        closeTimeUTC: { gte: subHours(date, 3) },
+      },
+      select: { id: true, openTimeUTC: true, closeTimeUTC: true },
+    });
+  }
+
   async logAttendance(qrPayload: string): Promise<HttpStatus.OK> {
     try {
       const payload =
@@ -93,13 +105,7 @@ export class AttendanceService {
         throw new NotFoundException('User not found');
       }
 
-      const event = await this.prisma.openingDay.findFirst({
-        where: {
-          openTimeUTC: { lte: addHours(checkInTime, 3) },
-          closeTimeUTC: { gte: subHours(checkInTime, 3) },
-        },
-        select: { id: true, openTimeUTC: true },
-      });
+      const event = await this.getClosestEvent(checkInTime);
       if (!event) {
         this.logger.warn(
           `No event found for user ${userId} at ${this.formatLogTime(checkInTime)}`,
@@ -137,5 +143,24 @@ export class AttendanceService {
 
   private formatLogTime(date: Date): string {
     return formatInTimeZone(date, 'Europe/Rome', 'dd/MM/yyyy HH:mm:ss');
+  }
+
+  // tries to guess event ID from the current date
+  async getUserCheckIn(userId: number): Promise<GetCheckInDto> {
+    const now = new Date();
+    const event = await this.getClosestEvent(now);
+    if (!event) {
+      throw new NotFoundException('No event found');
+    }
+
+    const data = this.prisma.attendance.findFirst({
+      where: { memberId: userId, openingDayId: event.id },
+      select: { checkInUTC: true },
+    });
+    if (!data) {
+      throw new NotFoundException('No check-in found');
+    }
+
+    return data;
   }
 }
