@@ -8,7 +8,6 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UTCDateMini } from '@date-fns/utc';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { PrismaService } from 'prisma/prisma.service';
 import { Logger } from 'winston';
@@ -20,7 +19,7 @@ import { AccessTokenDto } from './dto/access-token.dto';
 import { MailService } from 'mail/mail.service';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { addHours, addMinutes, format, formatDate, isBefore } from 'date-fns';
+import { addMinutes, format, formatDate, isBefore } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { JwtPayload } from './dto/jwt-payload.type';
 import { memberSelect } from 'member/member.select';
@@ -43,38 +42,7 @@ export class AuthService {
     private readonly r2Service: R2Service,
     private readonly config: ConfigService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {
-    setTimeout(async () => {
-      const dates = [
-        [8, 2],
-        [23, 2],
-        [1, 3],
-        [9, 3],
-        [15, 3],
-        [23, 3],
-        [30, 3],
-        [2, 4],
-        [9, 4],
-        // [16,4], // skip
-        [23, 4],
-        [30, 4],
-      ].map(([day, month]) => new UTCDateMini(2025, month - 1, day, 18, 0, 0));
-
-      for (const date of dates) {
-        const data = await this.prisma.openingDay.upsert({
-          where: {
-            openTimeUTC: date,
-          },
-          create: {
-            openTimeUTC: date,
-            closeTimeUTC: addHours(date, 7),
-          },
-          update: {},
-        });
-        console.log('Created opening day', data);
-      }
-    }, 5000);
-  }
+  ) {}
 
   async login({ email, password }: LoginDto): Promise<AccessTokenDto> {
     this.logger.debug(`Validating member with email: ${email}`);
