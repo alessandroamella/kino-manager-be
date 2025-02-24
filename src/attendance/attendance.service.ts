@@ -1,5 +1,4 @@
 import {
-  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
@@ -88,7 +87,7 @@ export class AttendanceService {
     });
   }
 
-  async logAttendance(qrPayload: string): Promise<HttpStatus.OK> {
+  async logAttendance(qrPayload: string): Promise<void> {
     try {
       const payload =
         await this.jwtService.verifyAsync<AttendanceJwtPayloadDto>(qrPayload);
@@ -119,7 +118,7 @@ export class AttendanceService {
         this.logger.warn(
           `User ${userId} already checked in at ${this.formatLogTime(checkInTime)} for event ${event.id}`,
         );
-        return HttpStatus.OK;
+        return;
       }
 
       await this.prisma.attendance.create({
@@ -133,7 +132,7 @@ export class AttendanceService {
       this.logger.info(
         `User ${userId} checked in at ${this.formatLogTime(checkInTime)} for event ${event.id}`,
       );
-      return HttpStatus.OK;
+      return;
     } catch (err) {
       this.logger.debug(`Invalid QR code: ${err?.message || err}`);
       throw new UnauthorizedException('Invalid QR code');
@@ -145,21 +144,19 @@ export class AttendanceService {
   }
 
   // tries to guess event ID from the current date
-  async getUserCheckIn(userId: number): Promise<HttpStatus.OK> {
+  async getUserCheckIn(userId: number): Promise<void> {
     const now = new Date();
     const event = await this.getClosestEvent(now);
     if (!event) {
       throw new NotFoundException('No event found');
     }
 
-    const data = this.prisma.attendance.findFirst({
+    const data = await this.prisma.attendance.findFirst({
       where: { memberId: userId, openingDayId: event.id },
       select: { checkInUTC: true },
     });
     if (!data) {
       throw new NotFoundException('No check-in found');
     }
-
-    return HttpStatus.OK;
   }
 }

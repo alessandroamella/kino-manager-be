@@ -6,7 +6,6 @@ import {
   ParseIntPipe,
   HttpCode,
   Get,
-  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -56,9 +55,7 @@ export class AttendanceController {
   })
   @ApiOkResponse({ description: 'Check-in result' })
   @Get('is-checked-in')
-  async checkIn(
-    @Member('userId', ParseIntPipe) userId: number,
-  ): Promise<HttpStatus.OK> {
+  async checkIn(@Member('userId', ParseIntPipe) userId: number) {
     return this.attendanceService.getUserCheckIn(userId);
   }
 }
