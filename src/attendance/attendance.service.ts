@@ -15,7 +15,6 @@ import QRCode from 'qrcode';
 import { formatInTimeZone } from 'date-fns-tz';
 import sharp from 'sharp';
 import { GetOpeningDayDto } from 'opening-day/dto/get-opening-day.dto';
-import { GetCheckInDto } from './dto/get-check-in.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -146,7 +145,7 @@ export class AttendanceService {
   }
 
   // tries to guess event ID from the current date
-  async getUserCheckIn(userId: number): Promise<GetCheckInDto> {
+  async getUserCheckIn(userId: number): Promise<HttpStatus.OK> {
     const now = new Date();
     const event = await this.getClosestEvent(now);
     if (!event) {
@@ -161,6 +160,6 @@ export class AttendanceService {
       throw new NotFoundException('No check-in found');
     }
 
-    return data;
+    return HttpStatus.OK;
   }
 }
