@@ -58,7 +58,7 @@ export class AuthService {
         // [16,4], // skip
         [23, 4],
         [30, 4],
-      ].map(([day, month]) => new UTCDateMini(2025, month - 1, day, 17, 0, 0));
+      ].map(([day, month]) => new UTCDateMini(2025, month - 1, day, 18, 0, 0));
 
       for (const date of dates) {
         const data = await this.prisma.openingDay.upsert({
