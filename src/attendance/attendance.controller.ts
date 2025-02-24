@@ -56,7 +56,9 @@ export class AttendanceController {
   })
   @ApiOkResponse({ description: 'Check-in result', type: GetCheckInDto })
   @Get('is-checked-in')
-  async checkIn(@Member('userId', ParseIntPipe) userId: number): Promise<void> {
-    await this.attendanceService.getUserCheckIn(userId);
+  async checkIn(
+    @Member('userId', ParseIntPipe) userId: number,
+  ): Promise<GetCheckInDto> {
+    return this.attendanceService.getUserCheckIn(userId);
   }
 }
