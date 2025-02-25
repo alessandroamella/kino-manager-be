@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  ParseIntPipe,
   Post,
   Query,
   Res,
@@ -43,9 +44,9 @@ export class PurchaseController {
     type: [GetPurchaseDto],
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  async findAll(@Query('limit') limit?: number) {
+  async findAll(@Query('limit', ParseIntPipe) limit?: number) {
     return this.purchaseService.findAll(
-      !Number.isNaN(+limit) ? +limit : undefined,
+      !Number.isNaN(limit) ? limit : undefined,
     );
   }
 

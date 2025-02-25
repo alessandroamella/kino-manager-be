@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   HttpStatus,
   Inject,
@@ -28,7 +27,6 @@ import CodiceFiscale from 'codice-fiscale-js';
 import { R2Service } from 'r2/r2.service';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigService } from '@nestjs/config';
-import sharp from 'sharp';
 import { ForgotPwdDto } from './dto/forgot-pwd.dto';
 import { ResetPwdDto } from './dto/reset-pwd.dto';
 
@@ -81,47 +79,6 @@ export class AuthService {
     };
   }
 
-  async b64ImgToWebpBuffer(base64Image: string): Promise<Buffer> {
-    try {
-      this.logger.debug(
-        `Converting base64 image ${base64Image.slice(0, 20)}...${base64Image.slice(-20)} to WebP`,
-      );
-
-      const mimeTypeRegex = /^data:(image\/(webp|png|jpeg));base64,/;
-      const mimeTypeMatch = base64Image.match(mimeTypeRegex);
-
-      if (!mimeTypeMatch || mimeTypeMatch.length < 3) {
-        this.logger.warn(
-          `Invalid base64 image format: ${base64Image.slice(0, 50)}..., type match array: ${JSON.stringify(mimeTypeMatch)}`,
-        );
-        throw new BadRequestException(
-          'Invalid base64 image format or unsupported MIME type.',
-        );
-      }
-
-      const format = mimeTypeMatch[2];
-      const base64Data = base64Image.replace(mimeTypeRegex, '');
-      const imageBuffer = Buffer.from(base64Data, 'base64');
-
-      if (format === 'webp') {
-        this.logger.debug('Image is already in WebP format');
-        return imageBuffer;
-      }
-
-      this.logger.debug(`Converting image from ${format} to WebP`);
-
-      return sharp(imageBuffer).webp().toBuffer();
-    } catch (error) {
-      this.logger.error(
-        `Error converting base64 to webp: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException(
-        'Failed to convert image to webp format.',
-      );
-    }
-  }
-
   async uploadBase64Signature(
     signatureB64: string,
     codiceFiscale?: string,
@@ -135,7 +92,7 @@ export class AuthService {
     try {
       await this.r2Service.uploadFile({
         key: signatureR2Key,
-        body: await this.b64ImgToWebpBuffer(signatureB64),
+        body: await this.r2Service.b64ImgToWebpBuffer(signatureB64),
         contentType: 'image/webp',
       });
       this.logger.debug(`Signature uploaded to R2 with key ${signatureR2Key}`);

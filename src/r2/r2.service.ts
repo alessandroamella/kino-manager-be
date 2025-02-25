@@ -1,5 +1,5 @@
 import {
-  HttpStatus,
+  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -14,8 +14,10 @@ import {
   HeadBucketCommand,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
+import sharp from 'sharp';
 
 @Injectable()
 export class R2Service implements OnModuleInit {
@@ -65,7 +67,7 @@ export class R2Service implements OnModuleInit {
     key: string;
     body: Buffer | Uint8Array | string | ReadableStream<any>;
     contentType: string;
-  }): Promise<HttpStatus.OK> {
+  }): Promise<void> {
     this.logger.debug(
       `Uploading file "${key}" to R2 bucket "${this.bucketName}"`,
     );
@@ -90,8 +92,6 @@ export class R2Service implements OnModuleInit {
         `Failed to upload file "${key}": ${error.message}`,
       );
     }
-
-    return HttpStatus.OK;
   }
 
   async downloadFile(key: string): Promise<ReadableStream<any> | null> {
@@ -147,5 +147,72 @@ export class R2Service implements OnModuleInit {
         }
       },
     });
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    this.logger.debug(
+      `Deleting file "${key}" from R2 bucket "${this.bucketName}"`,
+    );
+    try {
+      await this.s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+        }),
+      );
+      this.logger.info(
+        `File "${key}" deleted successfully from R2 bucket "${this.bucketName}"`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete file "${key}" from R2 bucket "${this.bucketName}":`,
+        error,
+      );
+      throw new InternalServerErrorException(
+        `Failed to delete file "${key}": ${error.message}`,
+      );
+    }
+  }
+
+  // utility
+  async b64ImgToWebpBuffer(base64Image: string): Promise<Buffer> {
+    try {
+      this.logger.debug(
+        `Converting base64 image ${base64Image.slice(0, 20)}...${base64Image.slice(-20)} to WebP`,
+      );
+
+      const mimeTypeRegex = /^data:(image\/(webp|png|jpeg));base64,/;
+      const mimeTypeMatch = base64Image.match(mimeTypeRegex);
+
+      if (!mimeTypeMatch || mimeTypeMatch.length < 3) {
+        this.logger.warn(
+          `Invalid base64 image format: ${base64Image.slice(0, 50)}..., type match array: ${JSON.stringify(mimeTypeMatch)}`,
+        );
+        throw new BadRequestException(
+          'Invalid base64 image format or unsupported MIME type.',
+        );
+      }
+
+      const format = mimeTypeMatch[2];
+      const base64Data = base64Image.replace(mimeTypeRegex, '');
+      const imageBuffer = Buffer.from(base64Data, 'base64');
+
+      if (format === 'webp') {
+        this.logger.debug('Image is already in WebP format');
+        return imageBuffer;
+      }
+
+      this.logger.debug(`Converting image from ${format} to WebP`);
+
+      return sharp(imageBuffer).webp().toBuffer();
+    } catch (error) {
+      this.logger.error(
+        `Error converting base64 to webp: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        'Failed to convert image to webp format.',
+      );
+    }
   }
 }

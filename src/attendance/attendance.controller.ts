@@ -4,11 +4,11 @@ import {
   StreamableFile,
   UseGuards,
   ParseIntPipe,
-  HttpCode,
   Get,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -25,10 +25,9 @@ import { Member } from 'member/member.decorator';
 export class AttendanceController {
   constructor(private attendanceService: AttendanceService) {}
 
-  @HttpCode(200)
   @ApiOperation({ summary: 'Generate attendance QR code image' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiOkResponse({
+  @ApiCreatedResponse({
     description: 'QR code image',
     content: {
       'image/webp': {

@@ -154,7 +154,7 @@ export class MemberDto extends BaseDocumentDto implements Member {
   memberSince: Date | null;
 
   @ApiProperty({
-    description: 'URL of the signature image',
+    description: 'R2 file key of the signature image',
   })
   @IsUrl()
   signatureR2Key: string;

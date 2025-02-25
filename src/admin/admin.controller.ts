@@ -9,6 +9,7 @@ import {
   Param,
   HttpCode,
   Post,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
@@ -36,7 +37,7 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('export-members')
-  @ApiOperation({ summary: 'Export all members to Excel (Admin only)' })
+  @ApiOperation({ summary: 'Export all members to Excel' })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })
@@ -56,7 +57,7 @@ export class AdminController {
   }
 
   @Get('users')
-  @ApiOperation({ summary: 'Get all users (Admin only)' })
+  @ApiOperation({ summary: 'Get all users' })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })
@@ -69,7 +70,7 @@ export class AdminController {
   }
 
   @Get('cards')
-  @ApiOperation({ summary: 'Get membership cards (Admin only)' })
+  @ApiOperation({ summary: 'Get membership cards' })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })
@@ -82,7 +83,7 @@ export class AdminController {
   }
 
   @Patch('add-card')
-  @ApiOperation({ summary: 'Add membership card to user (Admin only)' })
+  @ApiOperation({ summary: 'Add membership card to user' })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })
@@ -99,7 +100,7 @@ export class AdminController {
 
   @Get('membership-form/:id')
   @ApiOperation({
-    summary: 'Generate a filled membership PDF form (Admin only)',
+    summary: 'Generate a filled membership PDF form',
   })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
@@ -107,9 +108,9 @@ export class AdminController {
   @ApiOkResponse({ description: 'PDF form', type: StreamableFile })
   async generateMembershipForm(
     @Res({ passthrough: true }) res: Response,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<StreamableFile> {
-    const pdfBuffer = await this.adminService.generateMembershipPdf(+id);
+    const pdfBuffer = await this.adminService.generateMembershipPdf(id);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
@@ -121,7 +122,7 @@ export class AdminController {
   }
 
   @Get('signature/:key')
-  @ApiOperation({ summary: 'Get user signature (Admin only)' })
+  @ApiOperation({ summary: 'Get user signature' })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })

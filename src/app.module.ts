@@ -28,6 +28,7 @@ import { NewsletterModule } from './newsletter/newsletter.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AttendanceModule } from './attendance/attendance.module';
 import { OpeningDayModule } from './opening-day/opening-day.module';
+import { ExpenseModule } from './expense/expense.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { OpeningDayModule } from './opening-day/opening-day.module';
           .valid('development', 'staging', 'production')
           .default('development'),
         R2_SIGNATURES_FOLDER: Joi.string().required(),
+        R2_EXPENSES_FOLDER: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         COOKIE_SECRET: Joi.string().required(),
         MJ_APIKEY_PUBLIC: Joi.string().required(),
@@ -146,6 +148,7 @@ import { OpeningDayModule } from './opening-day/opening-day.module';
     NewsletterModule,
     AttendanceModule,
     OpeningDayModule,
+    ExpenseModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],

@@ -72,6 +72,7 @@ model Member {
   newsletterUnsubscribedAt     DateTime?
   newsletterDeliveries         NewsletterDelivery[]
   attendances                  Attendance[]
+  expenses                     Expense[]
 }
 
 model NewsletterDelivery {
@@ -168,4 +169,19 @@ model Attendance {
   updatedAt    DateTime   @updatedAt
 
   @@unique([memberId, openingDayId])
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        Member   @relation(fields: [userId], references: [id])
+  description String
+  amount      Float
+  repaid      Boolean  @default(false)
+  imageR2Key  String? // e.g. receipt
+  expenseDate DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, description, amount, expenseDate])
 }
