@@ -7,19 +7,30 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service'; // Assuming your mail service is in mail/mail.service.ts
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { DeliveryStatus, SubscriptionStatus } from '@prisma/client';
+import {
+  DeliveryStatus,
+  Newsletter,
+  NewsletterDelivery,
+  SubscriptionStatus,
+} from '@prisma/client';
 import { render } from 'ejs';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { addMinutes, subMinutes } from 'date-fns';
 import wait from 'wait';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class NewsletterService {
+  private readonly CACHE_KEY = 'scheduled_newsletters';
+  private readonly CACHE_DURATION = 60 * 60 * 1000; // 1 hour in ms
+
   constructor(
     private prisma: PrismaService,
     private mailService: MailService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async subscribe(memberId: number): Promise<HttpStatus.OK> {
@@ -45,28 +56,60 @@ export class NewsletterService {
     return HttpStatus.OK;
   }
 
-  @Cron(CronExpression.EVERY_MINUTE) // adjust cron expression as needed (e.g., EVERY_DAY_AT_8AM for daily at 8 AM)
+  @Cron(CronExpression.EVERY_MINUTE)
   async sendScheduledNewsletters() {
     this.logger.debug('Checking for scheduled newsletters..');
 
     const now = new Date();
-    const newslettersToSend = await this.prisma.newsletter.findMany({
-      where: {
-        scheduledAt: {
-          // leave a 5-minute buffer to allow for some delay
-          lte: addMinutes(now, 3),
-          gte: subMinutes(now, 2), // adjust as needed to allow for some delay
-        },
-        status: {
-          in: [DeliveryStatus.PENDING, DeliveryStatus.FAILED],
-        },
-      },
-      include: {
-        deliveries: true, // to avoid re-fetching deliveries later if needed.
-      },
-    });
+    let newslettersToSend: (Newsletter & {
+      deliveries: NewsletterDelivery[];
+    })[] = null;
 
-    if (newslettersToSend.length === 0) {
+    try {
+      newslettersToSend = await this.cacheManager.get(this.CACHE_KEY);
+      if (newslettersToSend) {
+        this.logger.debug('Scheduled newsletters retrieved from cache');
+      }
+    } catch (cacheError) {
+      this.logger.error('Error retrieving newsletters from cache', cacheError);
+      // If cache retrieval fails, fallback to fetching from DB
+      newslettersToSend = null; // Ensure we fetch from DB in case of cache error
+    }
+
+    if (!newslettersToSend) {
+      this.logger.debug(
+        'Scheduled newsletters not found in cache, fetching from DB',
+      );
+      newslettersToSend = await this.prisma.newsletter.findMany({
+        where: {
+          scheduledAt: {
+            // leave a 5-minute buffer to allow for some delay
+            lte: addMinutes(now, 3),
+            gte: subMinutes(now, 2),
+          },
+          status: {
+            in: [DeliveryStatus.PENDING, DeliveryStatus.FAILED],
+          },
+        },
+        include: {
+          deliveries: true, // to avoid re-fetching deliveries later if needed.
+        },
+      });
+
+      try {
+        await this.cacheManager.set(
+          this.CACHE_KEY,
+          newslettersToSend,
+          this.CACHE_DURATION,
+        );
+        this.logger.debug('Scheduled newsletters saved to cache for 1 hour');
+      } catch (cacheError) {
+        this.logger.error('Error saving newsletters to cache', cacheError);
+        // Non-critical error, continue without cache
+      }
+    }
+
+    if (!newslettersToSend || newslettersToSend.length === 0) {
       this.logger.debug('No newsletters scheduled to send at this time');
       return;
     }

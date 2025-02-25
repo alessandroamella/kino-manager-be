@@ -29,7 +29,9 @@ export class ExpenseService {
   }
 
   async createExpense(dto: CreateExpenseDto): Promise<ExpenseDto> {
-    this.logger.info(`Creating expense: ${JSON.stringify(dto)}`);
+    this.logger.info(
+      `Creating expense: ${JSON.stringify(omit(dto, ['imageBase64']))}`,
+    );
 
     let imageR2Key: string | null = null;
 
@@ -41,6 +43,7 @@ export class ExpenseService {
         'yyyy-MM-dd_HH-mm-ss',
       )}_${padStart(dto.userId.toString(), 4, '0')}_${uuidv4()}`;
 
+      this.logger.debug(`Uploading expense image ${_imageR2Key}`);
       await this.r2Service.uploadFile({
         key: _imageR2Key,
         body: await this.r2Service.b64ImgToWebpBuffer(dto.imageBase64),
