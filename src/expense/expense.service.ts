@@ -22,7 +22,6 @@ export class ExpenseService {
   ) {}
 
   async getExpenses(): Promise<ExpenseDto[]> {
-    this.logger.info('Fetching all expenses');
     return this.prisma.expense.findMany({
       select: expenseSelect,
     });
