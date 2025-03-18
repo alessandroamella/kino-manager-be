@@ -1,34 +1,34 @@
+import KeyvRedis from '@keyv/redis';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { MemberModule } from './member/member.module';
-import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
-import { WinstonModule, utilities as nestUtilities } from 'nest-winston';
-import winston from 'winston';
+import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import Joi from 'joi';
 import { colorize } from 'json-colorizer';
-import { AuthModule } from './auth/auth.module';
-import { JwtModule } from '@nestjs/jwt';
-import { CacheModule } from '@nestjs/cache-manager';
-import { IstatModule } from './istat/istat.module';
-import KeyvRedis from '@keyv/redis';
 import Keyv from 'keyv';
+import { WinstonModule, utilities as nestUtilities } from 'nest-winston';
 import { AcceptLanguageResolver, I18nModule } from 'nestjs-i18n';
 import path from 'path';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { MailService } from './mail/mail.service';
-import { MailModule } from './mail/mail.module';
+import winston from 'winston';
 import { AdminModule } from './admin/admin.module';
-import { ItemModule } from './item/item.module';
-import { PurchaseModule } from './purchase/purchase.module';
-import { MembershipPdfModule } from './membership-pdf/membership-pdf.module';
-import { R2Module } from './r2/r2.module';
-import { NewsletterModule } from './newsletter/newsletter.module';
-import { ScheduleModule } from '@nestjs/schedule';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { AttendanceModule } from './attendance/attendance.module';
-import { OpeningDayModule } from './opening-day/opening-day.module';
+import { AuthModule } from './auth/auth.module';
 import { ExpenseModule } from './expense/expense.module';
+import { IstatModule } from './istat/istat.module';
+import { ItemModule } from './item/item.module';
+import { MailModule } from './mail/mail.module';
+import { MailService } from './mail/mail.service';
+import { MemberModule } from './member/member.module';
+import { MembershipPdfModule } from './membership-pdf/membership-pdf.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
+import { OpeningDayModule } from './opening-day/opening-day.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { PurchaseModule } from './purchase/purchase.module';
+import { R2Module } from './r2/r2.module';
 
 @Module({
   imports: [
@@ -42,7 +42,7 @@ import { ExpenseModule } from './expense/expense.module';
     WinstonModule.forRoot({
       transports: [
         new winston.transports.Console({
-          level: 'debug',
+          level: process.env.NODE_ENV === 'production' ? 'info' : 'debug', // Set 'info' in production
           format: winston.format.combine(
             process.env.NODE_ENV === 'development'
               ? winston.format.combine(
