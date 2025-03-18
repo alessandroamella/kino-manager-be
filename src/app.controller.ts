@@ -18,4 +18,10 @@ export class AppController {
   getIp(@Req() req: Request): string {
     return req.ip;
   }
+
+  @Get('x-forwarded-for')
+  @ApiOperation({ summary: 'Get X-Forwarded-For' })
+  getXForwardedFor(@Req() req: Request): string {
+    return req.headers['x-forwarded-for'] as string;
+  }
 }

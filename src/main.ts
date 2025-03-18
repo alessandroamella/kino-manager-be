@@ -1,20 +1,20 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { RawBodyRequest, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { useContainer } from 'class-validator';
+import cookieParser from 'cookie-parser';
+import { json, Request, Response, urlencoded } from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import {
   WINSTON_MODULE_NEST_PROVIDER,
   WINSTON_MODULE_PROVIDER,
 } from 'nest-winston';
-import cookieParser from 'cookie-parser';
-import { useContainer } from 'class-validator';
-import { Logger } from 'winston';
-import helmet from 'helmet';
-import { urlencoded, json, Request, Response } from 'express';
 import { Encoding } from 'node:crypto';
-import rateLimit from 'express-rate-limit';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import { Logger } from 'winston';
+import { AppModule } from './app.module';
 
 const rawBodyBuffer = (
   req: RawBodyRequest<Request>,
@@ -31,7 +31,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // under nginx reverse proxy, we need to trust the proxy
-  app.set('trust proxy', true);
+  app.set('trust proxy', 1);
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
