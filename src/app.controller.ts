@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Req } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 import { AppService } from './app.service';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('app')
 @Controller()
@@ -10,5 +11,11 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Get('ip')
+  @ApiOperation({ summary: 'Get IP' })
+  getIp(@Req() req: Request): string {
+    return req.ip;
   }
 }
