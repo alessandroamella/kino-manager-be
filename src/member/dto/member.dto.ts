@@ -1,25 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsISO31661Alpha2,
-  IsDate,
-  IsOptional,
-  IsString,
-  MaxLength,
-  IsNotEmpty,
-  IsStrongPassword,
-  Length,
-  IsPhoneNumber,
-  IsBoolean,
-  IsInt,
-  IsEnum,
-  IsUrl,
-} from 'class-validator';
 import { Gender, Member, SubscriptionStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
-import { IsCodiceFiscale } from 'member/is-codice-fiscale.decorator';
+import {
+  IsBoolean,
+  IsDate,
+  IsEmail,
+  IsEnum,
+  IsInt,
+  IsISO31661Alpha2,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  IsStrongPassword,
+  IsUrl,
+  Length,
+  MaxLength,
+} from 'class-validator';
 import parsePhoneNumber from 'libphonenumber-js';
+import { IsCodiceFiscale } from 'member/is-codice-fiscale.decorator';
+import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
 
 export class MemberDto extends BaseDocumentDto implements Member {
   @ApiProperty()
@@ -42,7 +42,6 @@ export class MemberDto extends BaseDocumentDto implements Member {
   gender: Gender;
 
   @ApiProperty()
-  @Transform(({ value }) => value.trim())
   @IsString()
   @IsNotEmpty()
   @IsStrongPassword({
