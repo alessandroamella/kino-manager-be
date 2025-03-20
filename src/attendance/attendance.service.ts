@@ -134,6 +134,12 @@ export class AttendanceService {
       );
       return;
     } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      } else if (err.name === 'TokenExpiredError') {
+        this.logger.info(`Expired QR code: ${err.message}`);
+        throw new UnauthorizedException('Expired QR code');
+      }
       this.logger.info(`Invalid QR code: ${err?.message || err}`);
       throw new UnauthorizedException('Invalid QR code');
     }
