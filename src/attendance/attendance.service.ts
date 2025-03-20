@@ -5,15 +5,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { addHours, getUnixTime, subHours } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { GetOpeningDayDto } from 'opening-day/dto/get-opening-day.dto';
 import { PrismaService } from 'prisma/prisma.service';
+import QRCode from 'qrcode';
+import sharp from 'sharp';
 import { Logger } from 'winston';
 import { AttendanceJwtPayloadDto } from './dto/attendance-jwt-payload.dto';
-import { addHours, getUnixTime, subHours } from 'date-fns';
-import QRCode from 'qrcode';
-import { formatInTimeZone } from 'date-fns-tz';
-import sharp from 'sharp';
-import { GetOpeningDayDto } from 'opening-day/dto/get-opening-day.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -134,7 +134,7 @@ export class AttendanceService {
       );
       return;
     } catch (err) {
-      this.logger.debug(`Invalid QR code: ${err?.message || err}`);
+      this.logger.info(`Invalid QR code: ${err?.message || err}`);
       throw new UnauthorizedException('Invalid QR code');
     }
   }
