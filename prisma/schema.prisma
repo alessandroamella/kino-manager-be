@@ -47,7 +47,7 @@ model Member {
   codiceFiscale                String? // null if birthCountry is not 'IT'
   address                      String // to be split into address components
   streetName                   String?
-  streetNumber                 Int?
+  streetNumber                 String?
   postalCode                   String?
   city                         String?
   province                     String?

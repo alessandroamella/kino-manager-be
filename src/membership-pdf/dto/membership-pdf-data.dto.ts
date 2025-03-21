@@ -1,16 +1,17 @@
-import { PickType, ApiProperty } from '@nestjs/swagger';
-import { MemberDto } from 'member/dto/member.dto';
+import { ApiProperty, PickType } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import {
-  IsString,
-  MaxLength,
-  IsNotEmpty,
   IsDate,
   IsInt,
+  IsNotEmpty,
+  IsString,
   Length,
+  MaxLength,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { MemberDto } from 'member/dto/member.dto';
 
-// we rewrite many props in order to make them mandatory, because they're optional in
+// we rewrite many props in order to make them mandatory
+// because they're optional in MemberDto but required for the PDF
 
 export class MembershipPdfDataDto extends PickType(MemberDto, [
   'firstName',
@@ -34,8 +35,9 @@ export class MembershipPdfDataDto extends PickType(MemberDto, [
   streetName: string;
 
   @ApiProperty()
-  @IsInt()
-  streetNumber: number;
+  @IsString()
+  @IsNotEmpty()
+  streetNumber: string;
 
   @ApiProperty()
   @IsString()

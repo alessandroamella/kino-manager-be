@@ -16,6 +16,7 @@ import {
   IsUrl,
   Length,
   MaxLength,
+  ValidateIf,
 } from 'class-validator';
 import parsePhoneNumber from 'libphonenumber-js';
 import { IsCodiceFiscale } from 'member/is-codice-fiscale.decorator';
@@ -92,8 +93,9 @@ export class MemberDto extends BaseDocumentDto implements Member {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsInt()
-  streetNumber: number | null;
+  @IsString()
+  @IsNotEmpty()
+  streetNumber: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -113,6 +115,8 @@ export class MemberDto extends BaseDocumentDto implements Member {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @Length(2, 2)
+  @ValidateIf((o) => o.country === 'IT')
   @Length(2, 2)
   province: string | null;
 
