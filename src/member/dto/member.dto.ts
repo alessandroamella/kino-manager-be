@@ -10,7 +10,6 @@ import {
   IsISO31661Alpha2,
   IsNotEmpty,
   IsOptional,
-  IsPhoneNumber,
   IsString,
   IsStrongPassword,
   IsUrl,
@@ -20,6 +19,7 @@ import {
 } from 'class-validator';
 import parsePhoneNumber from 'libphonenumber-js';
 import { IsCodiceFiscale } from 'member/is-codice-fiscale.decorator';
+import { IsValidPhoneItaly } from 'member/is-valid-phone-italy.validator';
 import { BaseDocumentDto } from 'prisma/dto/base-document.dto';
 
 export class MemberDto extends BaseDocumentDto implements Member {
@@ -61,7 +61,7 @@ export class MemberDto extends BaseDocumentDto implements Member {
   email: string;
 
   @ApiProperty()
-  @IsPhoneNumber('IT')
+  @IsValidPhoneItaly()
   @Transform(({ value }) => {
     return parsePhoneNumber(value, 'IT')!.formatInternational();
   })
