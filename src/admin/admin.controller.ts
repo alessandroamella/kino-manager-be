@@ -1,18 +1,14 @@
 import {
+  Body,
   Controller,
   Get,
-  Res,
-  UseGuards,
-  StreamableFile,
-  Patch,
-  Body,
   Param,
-  HttpCode,
-  Post,
   ParseIntPipe,
+  Patch,
+  Res,
+  StreamableFile,
+  UseGuards,
 } from '@nestjs/common';
-import { AdminService } from './admin.service';
-import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -22,12 +18,13 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Response } from 'express';
 import { AdminGuard } from 'auth/admin.guard';
+import { JwtAuthGuard } from 'auth/jwt-auth.guard';
+import { Response } from 'express';
 import { MemberDataExtendedDto } from 'member/dto/member-data.dto';
+import { AdminService } from './admin.service';
 import { MembershipCardDto } from './dto/MembershipCard.dto';
 import { AddMembershipCardDto } from './dto/add-membership-card.dto';
-import { LogAttendanceDto } from 'attendance/dto/log-attendance.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -133,15 +130,5 @@ export class AdminController {
     return new StreamableFile(readable, {
       type: 'image/webp',
     });
-  }
-
-  @UseGuards(AdminGuard)
-  @HttpCode(200)
-  @ApiOperation({ summary: 'Log member attendance' })
-  @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiOkResponse({ description: 'Attendance logged' })
-  @Post('log-attendance')
-  async logAttendance(@Body() { jwt }: LogAttendanceDto): Promise<void> {
-    await this.adminService.logAttendance(jwt);
   }
 }

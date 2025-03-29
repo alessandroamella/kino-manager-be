@@ -150,6 +150,7 @@ model PurchasedItem {
 
 model OpeningDay {
   id           Int          @id @default(autoincrement())
+  name         String? // event name
   openTimeUTC  DateTime     @unique
   closeTimeUTC DateTime
   createdAt    DateTime     @default(now())

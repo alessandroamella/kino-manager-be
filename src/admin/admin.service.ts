@@ -1,24 +1,24 @@
 import {
-  Injectable,
-  Inject,
-  NotFoundException,
   BadRequestException,
   HttpStatus,
+  Inject,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'prisma/prisma.service';
+import { AttendanceService } from 'attendance/attendance.service';
 import { Workbook } from 'exceljs';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { Logger } from 'winston';
-import { I18nService } from 'nestjs-i18n';
-import { MembershipCardDto } from './dto/MembershipCard.dto';
+import { isNil, omitBy } from 'lodash';
 import { MemberDataExtendedDto } from 'member/dto/member-data.dto';
 import { memberSelect, memberSelectExtended } from 'member/member.select';
-import { AddMembershipCardDto } from './dto/add-membership-card.dto';
 import { MembershipPdfService } from 'membership-pdf/membership-pdf.service';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { I18nService } from 'nestjs-i18n';
+import { PrismaService } from 'prisma/prisma.service';
 import { R2Service } from 'r2/r2.service';
 import { UAParser } from 'ua-parser-js';
-import { omitBy, isNil } from 'lodash';
-import { AttendanceService } from 'attendance/attendance.service';
+import { Logger } from 'winston';
+import { AddMembershipCardDto } from './dto/add-membership-card.dto';
+import { MembershipCardDto } from './dto/MembershipCard.dto';
 
 @Injectable()
 export class AdminService {
@@ -287,9 +287,5 @@ export class AdminService {
 
   async getSignature(signatureR2Key: string) {
     return this.r2Service.downloadFileAsStream(signatureR2Key);
-  }
-
-  async logAttendance(jwt: string): Promise<void> {
-    await this.attendanceService.logAttendance(jwt);
   }
 }

@@ -7,28 +7,28 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { PrismaService } from 'prisma/prisma.service';
-import { Logger } from 'winston';
-import bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { SignupDto } from './dto/signup.dto';
-import { LoginDto } from './dto/login.dto';
-import { AccessTokenDto } from './dto/access-token.dto';
-import { MailService } from 'mail/mail.service';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import bcrypt from 'bcrypt';
+import CodiceFiscale from 'codice-fiscale-js';
 import { addMinutes, format, formatDate, isBefore } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { JwtPayload } from './dto/jwt-payload.type';
-import { memberSelect } from 'member/member.select';
 import { IstatService } from 'istat/istat.service';
-import CodiceFiscale from 'codice-fiscale-js';
+import { MailService } from 'mail/mail.service';
+import { memberSelect } from 'member/member.select';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { PrismaService } from 'prisma/prisma.service';
 import { R2Service } from 'r2/r2.service';
 import { v4 as uuidv4 } from 'uuid';
-import { ConfigService } from '@nestjs/config';
+import { Logger } from 'winston';
+import { AccessTokenDto } from './dto/access-token.dto';
 import { ForgotPwdDto } from './dto/forgot-pwd.dto';
+import { JwtPayload } from './dto/jwt-payload.type';
+import { LoginDto } from './dto/login.dto';
 import { ResetPwdDto } from './dto/reset-pwd.dto';
+import { SignupDto } from './dto/signup.dto';
 
 @Injectable()
 export class AuthService {
@@ -72,10 +72,7 @@ export class AuthService {
 
   async generateAccessToken(data: JwtPayload): Promise<AccessTokenDto> {
     return {
-      access_token: await this.jwtService.signAsync(data, {
-        secret: this.config.get('JWT_SECRET'),
-        expiresIn: '1h',
-      }),
+      access_token: await this.jwtService.signAsync(data, { expiresIn: '1h' }),
     };
   }
 
@@ -120,9 +117,7 @@ export class AuthService {
         );
         const data = await this.jwtService.verifyAsync<
           ForgotPwdDto & { iat: number }
-        >(member.resetPwdJwt, {
-          secret: this.config.get('JWT_SECRET'),
-        });
+        >(member.resetPwdJwt);
         this.logger.debug(
           `Reset password token still valid for ${email}: ${JSON.stringify(
             data,
@@ -196,9 +191,7 @@ export class AuthService {
   async resetPassword({ token, password }: ResetPwdDto): Promise<ForgotPwdDto> {
     let email: string;
     try {
-      const data = await this.jwtService.verifyAsync<ForgotPwdDto>(token, {
-        secret: this.config.get('JWT_SECRET'),
-      });
+      const data = await this.jwtService.verifyAsync<ForgotPwdDto>(token);
       email = data.email;
     } catch (err) {
       if (err.name === 'TokenExpiredError') {

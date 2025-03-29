@@ -4,112 +4,122 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { addHours, getUnixTime, subHours } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
+import { memberSelect } from 'member/member.select';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { GetOpeningDayDto } from 'opening-day/dto/get-opening-day.dto';
 import { PrismaService } from 'prisma/prisma.service';
-import QRCode from 'qrcode';
-import sharp from 'sharp';
+import QRCode, { QRCodeToBufferOptions } from 'qrcode';
 import { Logger } from 'winston';
-import { AttendanceJwtPayloadDto } from './dto/attendance-jwt-payload.dto';
+import { EventJwtDto } from './dto/event-jwt.dto';
+import { GetAttendanceDto } from './dto/get-attendance.dto';
 
 @Injectable()
 export class AttendanceService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  private async generateQrPayload(userId: number): Promise<string> {
-    const user = await this.prisma.member.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+  // generate JWT for event used to validate attendance
+  private async generateEventJwt(eventId: number): Promise<string> {
+    const payload: EventJwtDto = { id: eventId };
 
-    const payload: AttendanceJwtPayloadDto = {
-      u: userId,
-      d: getUnixTime(new Date()),
-    };
-
-    const jwtOptions = {
-      expiresIn: '1h',
-      header: {
-        alg: 'HS256',
-        typ: 'JWT',
-      },
-    };
-
-    const signed = await this.jwtService.signAsync(payload, jwtOptions);
-
+    const signed = await this.jwtService.signAsync(payload);
     this.logger.debug(
-      `Generated QR payload for user ${userId}: ${JSON.stringify(payload)} => ${signed} (${
-        new TextEncoder().encode(signed).length
-      } bytes)`,
+      `Generated event JWT for event ${eventId}: ${signed} (${new TextEncoder().encode(signed).length} bytes)`,
     );
 
     return signed;
   }
 
-  async generateQrImage(userId: number): Promise<Buffer> {
-    const payload = await this.generateQrPayload(userId);
-
+  private async generateQrImage(
+    payload: string,
+    options?: QRCodeToBufferOptions,
+  ): Promise<Buffer> {
     try {
       const pngBuffer: Buffer = await QRCode.toBuffer(payload, {
         errorCorrectionLevel: 'M',
         margin: 4,
         width: 300,
         type: 'png',
+        ...options,
       });
 
-      return sharp(pngBuffer).webp().toBuffer();
+      return pngBuffer;
     } catch (error) {
-      this.logger.error('Failed to generate QR code as WebP', {
-        userId,
-        error: error.message,
-      });
+      this.logger.error('Failed to generate QR code:');
+      this.logger.error(error);
       throw error;
     }
   }
 
-  private async getClosestEvent(date: Date): Promise<GetOpeningDayDto | null> {
-    return this.prisma.openingDay.findFirst({
-      where: {
-        openTimeUTC: { lte: addHours(date, 3) },
-        closeTimeUTC: { gte: subHours(date, 3) },
-      },
-      select: { id: true, openTimeUTC: true, closeTimeUTC: true },
+  // used by admins to generate QR codes for events
+  public async getEventQrCode(eventId: number): Promise<Buffer> {
+    const payload = await this.generateEventJwt(eventId);
+
+    const url = new URL('/profile', this.config.get('FRONTEND_URL'));
+    url.search = new URLSearchParams({
+      'check-in': payload,
+    }).toString();
+
+    const qrImage = await this.generateQrImage(url.toString(), {
+      margin: 4,
+      width: 1200,
     });
+    return qrImage;
   }
 
-  async logAttendance(qrPayload: string): Promise<void> {
+  // used by admins to get attendance for an event
+  public async getAttendance(eventId: number): Promise<GetAttendanceDto[]> {
+    const attendees = await this.prisma.attendance.findMany({
+      where: { openingDayId: eventId },
+      select: {
+        id: true,
+        checkInUTC: true,
+        member: { select: memberSelect },
+      },
+    });
+
+    return attendees;
+  }
+
+  private formatLogTime(date: Date): string {
+    return formatInTimeZone(date, 'Europe/Rome', 'dd/MM/yyyy HH:mm:ss');
+  }
+
+  public async logAttendance(userId: number, qrPayload: string): Promise<void> {
     try {
-      const payload =
-        await this.jwtService.verifyAsync<AttendanceJwtPayloadDto>(qrPayload);
-      const userId = payload.u;
-      const checkInTime = new Date(payload.d * 1000);
+      const { id: eventId } = await this.jwtService.verifyAsync<EventJwtDto>(
+        qrPayload,
+        {
+          secret: process.env.JWT_SECRET,
+        },
+      );
 
-      const user = await this.prisma.member.findUnique({
-        where: { id: userId },
-        select: { id: true },
+      const event = await this.prisma.openingDay.findUnique({
+        where: { id: eventId },
       });
-      if (!user) {
-        this.logger.warn(`User ${userId} not found`);
-        throw new NotFoundException('User not found');
-      }
-
-      const event = await this.getClosestEvent(checkInTime);
       if (!event) {
-        this.logger.warn(
-          `No event found for user ${userId} at ${this.formatLogTime(checkInTime)}`,
-        );
+        this.logger.warn(`Event ${eventId} not found for attendance check-in`);
         throw new NotFoundException('No event found');
       }
+
+      // check if already exists
+      const existing = await this.prisma.attendance.findFirst({
+        where: { memberId: userId, openingDayId: event.id },
+      });
+      if (existing) {
+        this.logger.warn(
+          `User ${userId} already checked in at ${this.formatLogTime(existing.checkInUTC)} for event ${event.id}`,
+        );
+        return;
+      }
+
+      const checkInTime = new Date();
 
       const existingAttendance = await this.prisma.attendance.findFirst({
         where: { memberId: userId, openingDayId: event.id },
@@ -123,14 +133,14 @@ export class AttendanceService {
 
       await this.prisma.attendance.create({
         data: {
-          memberId: user.id,
+          memberId: userId,
           openingDayId: event.id,
           checkInUTC: checkInTime,
         },
       });
 
       this.logger.info(
-        `User ${userId} checked in at ${this.formatLogTime(checkInTime)} for event ${event.id}`,
+        `User ${userId} checked in at event ${event.id} at ${this.formatLogTime(checkInTime)} for event ${event.id}`,
       );
       return;
     } catch (err) {
@@ -142,27 +152,6 @@ export class AttendanceService {
       }
       this.logger.info(`Invalid QR code: ${err?.message || err}`);
       throw new UnauthorizedException('Invalid QR code');
-    }
-  }
-
-  private formatLogTime(date: Date): string {
-    return formatInTimeZone(date, 'Europe/Rome', 'dd/MM/yyyy HH:mm:ss');
-  }
-
-  // tries to guess event ID from the current date
-  async getUserCheckIn(userId: number): Promise<void> {
-    const now = new Date();
-    const event = await this.getClosestEvent(now);
-    if (!event) {
-      throw new NotFoundException('No event found');
-    }
-
-    const data = await this.prisma.attendance.findFirst({
-      where: { memberId: userId, openingDayId: event.id },
-      select: { checkInUTC: true },
-    });
-    if (!data) {
-      throw new NotFoundException('No check-in found');
     }
   }
 }

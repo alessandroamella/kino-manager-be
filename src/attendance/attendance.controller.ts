@@ -1,22 +1,27 @@
 import {
   Controller,
+  Get,
+  HttpCode,
+  Param,
+  ParseIntPipe,
   Post,
   StreamableFile,
   UseGuards,
-  ParseIntPipe,
-  Get,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { AttendanceService } from './attendance.service';
+import { AdminGuard } from 'auth/admin.guard';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import { Member } from 'member/member.decorator';
+import { AttendanceService } from './attendance.service';
+import { GetAttendanceDto } from './dto/get-attendance.dto';
 
 @ApiTags('attendance')
 @ApiBearerAuth()
@@ -25,12 +30,13 @@ import { Member } from 'member/member.decorator';
 export class AttendanceController {
   constructor(private attendanceService: AttendanceService) {}
 
-  @ApiOperation({ summary: 'Generate attendance QR code image' })
-  @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiCreatedResponse({
-    description: 'QR code image',
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Get event QR code' })
+  @ApiNotFoundResponse({ description: 'Event not found' })
+  @ApiOkResponse({
+    description: 'Event QR code',
     content: {
-      'image/webp': {
+      'image/png': {
         schema: {
           type: 'string',
           format: 'binary',
@@ -38,23 +44,59 @@ export class AttendanceController {
       },
     },
   })
-  @Post('qr-code')
-  async generateQrCode(
-    @Member('userId', ParseIntPipe) userId: number,
+  @Get('event-qr/:id')
+  @ApiParam({
+    name: 'id',
+    description: 'Event ID',
+    type: 'number',
+  })
+  async getEventQrCode(
+    @Param('id', ParseIntPipe) eventId: number,
   ): Promise<StreamableFile> {
-    const imgBuffer = await this.attendanceService.generateQrImage(userId);
-    return new StreamableFile(imgBuffer, {
-      type: 'image/webp',
+    const qrImage = await this.attendanceService.getEventQrCode(eventId);
+    return new StreamableFile(qrImage, {
+      type: 'image/png',
     });
   }
 
-  @ApiOperation({ summary: 'Check in attendance' })
-  @ApiNotFoundResponse({
-    description: 'Attendance not found (not checked in) or event not found',
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Get attendee list' })
+  @ApiNotFoundResponse({ description: 'Event not found' })
+  @ApiOkResponse({
+    description: 'Attendance list',
+    type: [GetAttendanceDto],
   })
-  @ApiOkResponse({ description: 'Check-in result' })
-  @Get('is-checked-in')
-  async checkIn(@Member('userId', ParseIntPipe) userId: number) {
-    return this.attendanceService.getUserCheckIn(userId);
+  @ApiParam({
+    name: 'id',
+    description: 'Event ID',
+    type: 'number',
+  })
+  @Get('event/:id')
+  async getAttendance(
+    @Param('id', ParseIntPipe) eventId: number,
+  ): Promise<GetAttendanceDto[]> {
+    return this.attendanceService.getAttendance(eventId);
+  }
+
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Check in to event' })
+  @ApiNotFoundResponse({
+    description: 'Event not found',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid QR code',
+  })
+  @ApiOkResponse({ description: 'Checked in' })
+  @ApiParam({
+    name: 'jwt',
+    description: 'JWT token from QR code',
+    type: 'string',
+  })
+  @Post('check-in/:jwt')
+  async checkIn(
+    @Member('userId', ParseIntPipe) userId: number,
+    @Param('jwt') jwt: string,
+  ) {
+    return this.attendanceService.logAttendance(userId, jwt);
   }
 }
