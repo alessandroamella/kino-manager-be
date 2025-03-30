@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
   ParseIntPipe,
   Post,
   Query,
@@ -9,7 +11,6 @@ import {
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
-import { PurchaseService } from './purchase.service';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -20,9 +21,10 @@ import {
 } from '@nestjs/swagger';
 import { AdminGuard } from 'auth/admin.guard';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
-import { GetPurchaseDto } from './dto/get-purchase.dto';
-import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { Response } from 'express';
+import { CreatePurchaseDto } from './dto/create-purchase.dto';
+import { GetPurchaseDto } from './dto/get-purchase.dto';
+import { PurchaseService } from './purchase.service';
 
 @ApiTags('purchase')
 @ApiBearerAuth()
@@ -82,5 +84,16 @@ export class PurchaseController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async create(@Body() dto: CreatePurchaseDto) {
     return this.purchaseService.create(dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a purchase' })
+  @ApiOkResponse({
+    description: 'Purchase deleted successfully',
+    type: GetPurchaseDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    return this.purchaseService.delete(id);
   }
 }

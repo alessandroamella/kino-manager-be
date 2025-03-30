@@ -1,23 +1,23 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { PrismaService } from 'prisma/prisma.service';
-import { Logger } from 'winston';
-import { GetPurchaseDto } from './dto/get-purchase.dto';
-import { CreatePurchaseDto } from './dto/create-purchase.dto';
-import { cloneDeepWith, omit, pick, sumBy } from 'lodash';
-import { purchaseSelect } from './purchase.select';
 import {
-  WebSocketGateway,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { ItemDto } from 'item/dto/item.dto';
-import unidecode from 'unidecode';
 import { PaymentMethod } from '@prisma/client';
 import { formatInTimeZone } from 'date-fns-tz';
 import { Workbook } from 'exceljs';
+import { ItemDto } from 'item/dto/item.dto';
+import { cloneDeepWith, omit, pick, sumBy } from 'lodash';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { PrismaService } from 'prisma/prisma.service';
+import { Server, Socket } from 'socket.io';
+import unidecode from 'unidecode';
+import { Logger } from 'winston';
+import { CreatePurchaseDto } from './dto/create-purchase.dto';
+import { GetPurchaseDto } from './dto/get-purchase.dto';
+import { purchaseSelect } from './purchase.select';
 
 @WebSocketGateway(parseInt(process.env.SOCKET_IO_PORT), {
   namespace: '/purchase',
@@ -276,5 +276,23 @@ export class PurchaseService
 
     this.emitPurchaseCreated(newPurchase, items);
     return newPurchase;
+  }
+
+  async delete(id: number): Promise<GetPurchaseDto> {
+    this.logger.debug('Deleting purchase with ID: ' + id);
+    const deletedPurchase = await this.prisma.purchase.delete({
+      where: {
+        id,
+      },
+      select: purchaseSelect,
+    });
+
+    this.logger.info(
+      'Deleted purchase with ID: ' +
+        id +
+        ', data: ' +
+        JSON.stringify(deletedPurchase),
+    );
+    return deletedPurchase;
   }
 }
