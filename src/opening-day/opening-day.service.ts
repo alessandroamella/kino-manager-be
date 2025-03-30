@@ -1,13 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { GetOpeningDayDto } from './dto/get-opening-day.dto';
-import { PrismaService } from 'prisma/prisma.service';
 import { addMonths, subMonths } from 'date-fns';
+import { PrismaService } from 'prisma/prisma.service';
+import { GetOpeningDayWithAttendeesDto } from './dto/get-opening-day-with-attendees.dto';
+import { GetOpeningDayDto } from './dto/get-opening-day.dto';
 
 @Injectable()
 export class OpeningDayService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getOpeningDays(): Promise<GetOpeningDayDto[]> {
+  // Overload 1: When includeAttendees is specifically 'true'
+  async getOpeningDays(
+    includeAttendees: true,
+  ): Promise<GetOpeningDayWithAttendeesDto[]>;
+
+  // Overload 2: When includeAttendees is specifically 'false'
+  async getOpeningDays(includeAttendees: false): Promise<GetOpeningDayDto[]>;
+
+  async getOpeningDays(
+    includeAttendees: boolean,
+  ): Promise<(GetOpeningDayDto | GetOpeningDayWithAttendeesDto)[]> {
     return this.prisma.openingDay.findMany({
       where: {
         openTimeUTC: {
@@ -20,6 +31,14 @@ export class OpeningDayService {
         id: true,
         openTimeUTC: true,
         closeTimeUTC: true,
+        attendances: includeAttendees
+          ? {
+              select: {
+                memberId: true,
+                checkInUTC: true,
+              },
+            }
+          : undefined,
       },
       orderBy: {
         openTimeUTC: 'asc',

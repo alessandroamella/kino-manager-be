@@ -21,7 +21,6 @@ import { AdminGuard } from 'auth/admin.guard';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import { Member } from 'member/member.decorator';
 import { AttendanceService } from './attendance.service';
-import { GetAttendanceDto } from './dto/get-attendance.dto';
 
 @ApiTags('attendance')
 @ApiBearerAuth()
@@ -57,25 +56,6 @@ export class AttendanceController {
     return new StreamableFile(qrImage, {
       type: 'image/png',
     });
-  }
-
-  @UseGuards(AdminGuard)
-  @ApiOperation({ summary: 'Get attendee list' })
-  @ApiNotFoundResponse({ description: 'Event not found' })
-  @ApiOkResponse({
-    description: 'Attendance list',
-    type: [GetAttendanceDto],
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Event ID',
-    type: 'number',
-  })
-  @Get('event/:id')
-  async getAttendance(
-    @Param('id', ParseIntPipe) eventId: number,
-  ): Promise<GetAttendanceDto[]> {
-    return this.attendanceService.getAttendance(eventId);
   }
 
   @HttpCode(200)

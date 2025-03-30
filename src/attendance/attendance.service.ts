@@ -7,13 +7,11 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { formatInTimeZone } from 'date-fns-tz';
-import { memberSelect } from 'member/member.select';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { PrismaService } from 'prisma/prisma.service';
 import QRCode, { QRCodeToBufferOptions } from 'qrcode';
 import { Logger } from 'winston';
 import { EventJwtDto } from './dto/event-jwt.dto';
-import { GetAttendanceDto } from './dto/get-attendance.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -71,20 +69,6 @@ export class AttendanceService {
       width: 1200,
     });
     return qrImage;
-  }
-
-  // used by admins to get attendance for an event
-  public async getAttendance(eventId: number): Promise<GetAttendanceDto[]> {
-    const attendees = await this.prisma.attendance.findMany({
-      where: { openingDayId: eventId },
-      select: {
-        id: true,
-        checkInUTC: true,
-        member: { select: memberSelect },
-      },
-    });
-
-    return attendees;
   }
 
   private formatLogTime(date: Date): string {
