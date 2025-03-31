@@ -72,7 +72,8 @@ export class AuthService {
 
   async generateAccessToken(data: JwtPayload): Promise<AccessTokenDto> {
     return {
-      access_token: await this.jwtService.signAsync(data, { expiresIn: '1h' }),
+      // jwts last for 1 day
+      access_token: await this.jwtService.signAsync(data, { expiresIn: '1d' }),
     };
   }
 
