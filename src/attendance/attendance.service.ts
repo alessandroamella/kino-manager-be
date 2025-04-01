@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
@@ -24,7 +25,15 @@ export class AttendanceService {
 
   // generate JWT for event used to validate attendance
   private async generateEventJwt(eventId: number): Promise<string> {
-    const payload: EventJwtDto = { id: eventId };
+    const event = await this.prisma.openingDay.findUnique({
+      where: { id: eventId },
+    });
+    if (!event) {
+      this.logger.warn(`Event ${eventId} not found in generateEventJwt`);
+      throw new BadRequestException('No event found');
+    }
+
+    const payload: EventJwtDto = { id: event.id };
 
     const signed = await this.jwtService.signAsync(payload);
     this.logger.debug(
@@ -55,14 +64,20 @@ export class AttendanceService {
     }
   }
 
-  // used by admins to generate QR codes for events
-  public async getEventQrCode(eventId: number): Promise<Buffer> {
+  public async getEventCheckInUrl(eventId: number): Promise<string> {
     const payload = await this.generateEventJwt(eventId);
 
     const url = new URL('/profile', this.config.get('FRONTEND_URL'));
     url.search = new URLSearchParams({
       'check-in': payload,
     }).toString();
+
+    return url.toString();
+  }
+
+  // used by admins to generate QR codes for events
+  public async getEventQrCode(eventId: number): Promise<Buffer> {
+    const url = await this.getEventCheckInUrl(eventId);
 
     const qrImage = await this.generateQrImage(url.toString(), {
       margin: 4,

@@ -21,6 +21,7 @@ import { AdminGuard } from 'auth/admin.guard';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import { Member } from 'member/member.decorator';
 import { AttendanceService } from './attendance.service';
+import { CheckInUrlDto } from './dto/check-in-url.dto';
 
 @ApiTags('attendance')
 @ApiBearerAuth()
@@ -56,6 +57,26 @@ export class AttendanceController {
     return new StreamableFile(qrImage, {
       type: 'image/png',
     });
+  }
+
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Get event check-in URL' })
+  @ApiNotFoundResponse({ description: 'Event not found' })
+  @ApiOkResponse({
+    description: 'Event check-in URL',
+    type: CheckInUrlDto,
+  })
+  @Get('event-checkin-url/:id')
+  @ApiParam({
+    name: 'id',
+    description: 'Event ID',
+    type: 'number',
+  })
+  async getEventCheckInUrl(
+    @Param('id', ParseIntPipe) eventId: number,
+  ): Promise<CheckInUrlDto> {
+    const url = await this.attendanceService.getEventCheckInUrl(eventId);
+    return { url };
   }
 
   @HttpCode(200)
