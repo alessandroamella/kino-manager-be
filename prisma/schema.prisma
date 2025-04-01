@@ -77,9 +77,9 @@ model Member {
 
 model NewsletterDelivery {
   id           Int            @id @default(autoincrement())
-  newsletter   Newsletter     @relation(fields: [newsletterId], references: [id])
+  newsletter   Newsletter     @relation(fields: [newsletterId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   newsletterId Int
-  member       Member         @relation(fields: [memberId], references: [id])
+  member       Member         @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   memberId     Int
   sentAt       DateTime?
   status       DeliveryStatus @default(PENDING) // Initially pending until sending starts
@@ -162,9 +162,9 @@ model OpeningDay {
 
 model Attendance {
   id           Int        @id @default(autoincrement())
-  member       Member     @relation(fields: [memberId], references: [id])
+  member       Member     @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   memberId     Int
-  openingDay   OpeningDay @relation(fields: [openingDayId], references: [id])
+  openingDay   OpeningDay @relation(fields: [openingDayId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   openingDayId Int
   checkInUTC   DateTime
   checkOutUTC  DateTime?
