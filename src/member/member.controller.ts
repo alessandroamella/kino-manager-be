@@ -15,12 +15,13 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { MemberService } from './member.service';
-import { MemberDataDto } from './dto/member-data.dto';
 import { JwtAuthGuard } from 'auth/jwt-auth.guard';
 import { Request } from 'express';
 import { AddSignatureDto } from './dto/add-signature.dto';
+import { GetAttendancesDto } from './dto/get-attendances.dto';
+import { MemberDataDto } from './dto/member-data.dto';
 import { Member } from './member.decorator';
+import { MemberService } from './member.service';
 
 @ApiTags('member')
 @ApiBearerAuth()
@@ -57,5 +58,20 @@ export class MemberController {
     @Body() dto: AddSignatureDto,
   ) {
     return this.memberService.addSignature(userId, dto.signatureB64);
+  }
+
+  @ApiOperation({ summary: 'Get events attended (for pictures URL)' })
+  @ApiUnauthorizedResponse({
+    description: 'Access token not provided, invalid or user not found',
+  })
+  @ApiOkResponse({
+    description: 'List of events attended',
+    type: [GetAttendancesDto],
+  })
+  @Get('events-attended')
+  async getEventsAttended(
+    @Member('userId', ParseIntPipe) userId: number,
+  ): Promise<GetAttendancesDto[]> {
+    return this.memberService.getEventsAttended(userId);
   }
 }

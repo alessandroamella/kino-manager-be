@@ -5,13 +5,14 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { AuthService } from 'auth/auth.service';
+import { IncomingHttpHeaders } from 'http';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { PrismaService } from 'prisma/prisma.service';
 import { Logger } from 'winston';
-import { memberSelect } from './member.select';
+import { GetAttendancesDto } from './dto/get-attendances.dto';
 import { MemberDataWithTokenDto } from './dto/member-data-with-token.dto';
-import { AuthService } from 'auth/auth.service';
-import { IncomingHttpHeaders } from 'http';
+import { memberSelect } from './member.select';
 
 @Injectable()
 export class MemberService {
@@ -89,5 +90,25 @@ export class MemberService {
       data: { signatureR2Key },
     });
     return HttpStatus.OK;
+  }
+
+  async getEventsAttended(memberId: number): Promise<GetAttendancesDto[]> {
+    this.logger.debug(`Getting events attended by member with id ${memberId}`);
+    const attendances = await this.prisma.attendance.findMany({
+      where: { memberId },
+      select: {
+        openingDay: {
+          select: {
+            name: true,
+            openTimeUTC: true,
+            eventPicturesUrl: true,
+            eventThumbnailUrl: true,
+          },
+        },
+        checkInUTC: true,
+      },
+    });
+
+    return attendances;
   }
 }

@@ -19,4 +19,14 @@ export class OpeningDayDto extends BaseDocumentDto implements OpeningDay {
   @Type(() => Date)
   @IsDate()
   closeTimeUTC: Date;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  eventPicturesUrl: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  eventThumbnailUrl: string | null;
 }

@@ -149,13 +149,15 @@ model PurchasedItem {
 }
 
 model OpeningDay {
-  id           Int          @id @default(autoincrement())
-  name         String? // event name
-  openTimeUTC  DateTime     @unique
-  closeTimeUTC DateTime
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  attendances  Attendance[]
+  id                Int          @id @default(autoincrement())
+  name              String? // event name
+  openTimeUTC       DateTime     @unique
+  closeTimeUTC      DateTime
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  eventThumbnailUrl String?
+  eventPicturesUrl  String? // e.g. Drive folder link
+  attendances       Attendance[]
 }
 
 model Attendance {
