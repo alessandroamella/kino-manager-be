@@ -31,6 +31,8 @@ export class OpeningDayService {
         id: true,
         openTimeUTC: true,
         closeTimeUTC: true,
+        name: true,
+        eventThumbnailUrl: true,
         attendances: includeAttendees
           ? {
               select: {
