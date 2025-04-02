@@ -159,6 +159,7 @@ export class AuthService {
       select: {
         firstName: true,
         updatedAt: true,
+        gender: true,
       },
     });
 
@@ -177,6 +178,9 @@ export class AuthService {
           resetUrl: `${this.config.get(
             'FRONTEND_URL',
           )}/auth/reset-password?token=${resetPwdJwt}`,
+          genderLetter: this.shared.getGenderSuffixItalian(
+            updatedMember.gender,
+          ),
         },
       )
       .then(() => {
@@ -301,6 +305,7 @@ export class AuthService {
         {
           firstName: data.firstName,
           createdAt: format(new Date(), 'dd MMM yyyy', { locale: it }),
+          genderLetter: this.shared.getGenderSuffixItalian(data.gender),
         },
       )
       .then(() => {
