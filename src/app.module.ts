@@ -29,6 +29,7 @@ import { OpeningDayModule } from './opening-day/opening-day.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { R2Module } from './r2/r2.module';
+import { SharedModule } from './shared/shared.module';
 
 @Module({
   imports: [
@@ -149,6 +150,7 @@ import { R2Module } from './r2/r2.module';
     AttendanceModule,
     OpeningDayModule,
     ExpenseModule,
+    SharedModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService],

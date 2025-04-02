@@ -6,7 +6,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Gender } from '@prisma/client';
 import { Workbook } from 'exceljs';
 import { isNil, omitBy } from 'lodash';
 import { MailService } from 'mail/mail.service';
@@ -19,6 +18,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PrismaService } from 'prisma/prisma.service';
 import { R2Service } from 'r2/r2.service';
+import { SharedService } from 'shared/shared.service';
 import { UAParser } from 'ua-parser-js';
 import { Logger } from 'winston';
 import { AddMembershipCardDto } from './dto/add-membership-card.dto';
@@ -33,6 +33,7 @@ export class AdminService {
     private readonly r2Service: R2Service,
     private readonly membershipPdfService: MembershipPdfService,
     private readonly config: ConfigService,
+    private readonly shared: SharedService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -279,7 +280,7 @@ export class AdminService {
           firstName: member.firstName,
           number: data.membershipCardNumber.toString(),
           downloadPdfUrl: `${this.config.get('FRONTEND_URL')}/v1/membership-pdf/${member.id}`,
-          genderLetter: member.gender === Gender.F ? 'a' : 'o',
+          genderLetter: this.shared.getGenderSuffixItalian(member.gender),
         },
         [
           {

@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Gender } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import CodiceFiscale from 'codice-fiscale-js';
 import { addMinutes, format, formatDate, isBefore } from 'date-fns';
@@ -22,6 +21,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PrismaService } from 'prisma/prisma.service';
 import { R2Service } from 'r2/r2.service';
+import { SharedService } from 'shared/shared.service';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from 'winston';
 import { AccessTokenDto } from './dto/access-token.dto';
@@ -40,6 +40,7 @@ export class AuthService {
     private readonly istatService: IstatService,
     private readonly r2Service: R2Service,
     private readonly config: ConfigService,
+    private readonly shared: SharedService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -290,7 +291,7 @@ export class AuthService {
     this.mailService
       .sendEmail(
         { email, name: data.firstName },
-        `Benvenut${data.gender === Gender.F ? 'a' : 'o'} al Kinó Café`,
+        `Benvenut${this.shared.getGenderSuffixItalian(data.gender)} al Kinó Café`,
         await readFile(
           join(process.cwd(), 'resources/emails/new-account.ejs'),
           {
