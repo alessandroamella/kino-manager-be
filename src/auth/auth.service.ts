@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { Gender } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import CodiceFiscale from 'codice-fiscale-js';
 import { addMinutes, format, formatDate, isBefore } from 'date-fns';
@@ -289,7 +290,7 @@ export class AuthService {
     this.mailService
       .sendEmail(
         { email, name: data.firstName },
-        'Benvenuto al Kinó Café',
+        `Benvenut${data.gender === Gender.F ? 'a' : 'o'} al Kinó Café`,
         await readFile(
           join(process.cwd(), 'resources/emails/new-account.ejs'),
           {
