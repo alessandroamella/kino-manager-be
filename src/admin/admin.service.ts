@@ -279,7 +279,7 @@ export class AdminService {
         {
           firstName: member.firstName,
           number: data.membershipCardNumber.toString(),
-          downloadPdfUrl: `${this.config.get('FRONTEND_URL')}/v1/membership-pdf/${member.id}`,
+          downloadPdfUrl: `${this.config.get('FRONTEND_URL')}/profile?download-membership-pdf=true`,
           genderLetter: this.shared.getGenderSuffixItalian(member.gender),
         },
         [
