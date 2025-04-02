@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Gender } from '@prisma/client';
 import { Workbook } from 'exceljs';
 import { isNil, omitBy } from 'lodash';
 import { MailService } from 'mail/mail.service';
@@ -203,6 +204,7 @@ export class AdminService {
         email: true,
         firstName: true,
         memberSince: true,
+        gender: true,
       },
     });
     if (!member) {
@@ -277,6 +279,7 @@ export class AdminService {
           firstName: member.firstName,
           number: data.membershipCardNumber.toString(),
           downloadPdfUrl: `${this.config.get('FRONTEND_URL')}/v1/membership-pdf/${member.id}`,
+          genderLetter: member.gender === Gender.F ? 'a' : 'o',
         },
         [
           {
