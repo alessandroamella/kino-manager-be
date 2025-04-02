@@ -181,9 +181,9 @@ export class AuthService {
         this.logger.info(`Reset password email sent to ${email}`);
       })
       .catch((error) => {
-        this.logger.error(
-          `Error sending reset password email to ${email}: ${error}`,
-        );
+        this.logger.error(`Error sending reset password email to ${email}:`);
+        this.logger.error(error);
+        console.log(error); // just to make sure it shows up in the logs
       });
 
     return HttpStatus.OK;
@@ -305,7 +305,9 @@ export class AuthService {
         this.logger.info(`Welcome email sent to ${email}`);
       })
       .catch((error) => {
-        this.logger.error(`Error sending welcome email to ${email}: ${error}`);
+        this.logger.error(`Error sending welcome email to ${email}:`);
+        this.logger.error(error);
+        console.log(error); // just to make sure it shows up in the logs
       });
 
     return this.login({ email, password: data.password });

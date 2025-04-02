@@ -1,15 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { Logger } from 'winston';
-import { readFile } from 'fs/promises';
-import path from 'path';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { formatDate } from 'date-fns';
-import { MembershipPdfDataDto } from './dto/membership-pdf-data.dto';
-import { PDFDocument, StandardFonts } from 'pdf-lib';
-import { I18nService } from 'nestjs-i18n';
+import { readFile } from 'fs/promises';
 import parsePhoneNumber from 'libphonenumber-js';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { I18nService } from 'nestjs-i18n';
+import path from 'path';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { PrismaService } from 'prisma/prisma.service';
 import { R2Service } from 'r2/r2.service';
 import sharp from 'sharp';
+import { Logger } from 'winston';
+import { MembershipPdfDataDto } from './dto/membership-pdf-data.dto';
 
 @Injectable()
 export class MembershipPdfService {
@@ -21,10 +22,52 @@ export class MembershipPdfService {
   constructor(
     private readonly i18n: I18nService,
     private readonly r2Service: R2Service,
+    private readonly prisma: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async generatePdf(data: MembershipPdfDataDto) {
+  async generateMembershipPdf(
+    userId: number,
+  ): Promise<Uint8Array<ArrayBufferLike>> {
+    const member = await this.prisma.member.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (!member || (!member.isAdmin && member.id !== userId)) {
+      this.logger.debug(
+        `Member not found or not authorized to generate PDF for member ${userId} (member: ${member ? `${member.firstName} ${member.lastName}` : 'not found'})`,
+      );
+      throw new BadRequestException(
+        'Member not found or member data incomplete',
+      );
+    }
+
+    const keys = [
+      'birthComune',
+      'streetName',
+      'streetNumber',
+      'postalCode',
+      'city',
+      'province',
+      'country',
+      'codiceFiscale',
+      'birthProvince',
+      'memberSince',
+      'membershipCardNumber',
+      'signatureR2Key',
+    ];
+    if (keys.some((e) => member[e] === null || member[e] === '')) {
+      this.logger.debug(
+        `Member data incomplete for member ${member.id}, cannot generate PDF`,
+      );
+      throw new BadRequestException(
+        'Member data incomplete, cannot generate PDF',
+      );
+    }
+
+    const data = member as MembershipPdfDataDto;
+
     const signatureWebpStream = await this.r2Service.downloadFile(
       data.signatureR2Key,
     );

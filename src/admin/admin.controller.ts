@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Res,
   StreamableFile,
@@ -80,7 +79,7 @@ export class AdminController {
   }
 
   @Patch('add-card')
-  @ApiOperation({ summary: 'Add membership card to user' })
+  @ApiOperation({ summary: 'Assign membership card to user' })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - Admin role required',
   })
@@ -93,29 +92,6 @@ export class AdminController {
   })
   async addMembershipCard(@Body() dto: AddMembershipCardDto) {
     return this.adminService.addMembershipCard(dto);
-  }
-
-  @Get('membership-form/:id')
-  @ApiOperation({
-    summary: 'Generate a filled membership PDF form',
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Unauthorized - Admin role required',
-  })
-  @ApiOkResponse({ description: 'PDF form', type: StreamableFile })
-  async generateMembershipForm(
-    @Res({ passthrough: true }) res: Response,
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<StreamableFile> {
-    const pdfBuffer = await this.adminService.generateMembershipPdf(id);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      'attachment; filename=membership-form.pdf',
-    );
-
-    return new StreamableFile(pdfBuffer);
   }
 
   @Get('signature/:key')

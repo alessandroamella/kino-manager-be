@@ -5,14 +5,17 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AttendanceService } from 'attendance/attendance.service';
+import { ConfigService } from '@nestjs/config';
 import { Workbook } from 'exceljs';
 import { isNil, omitBy } from 'lodash';
+import { MailService } from 'mail/mail.service';
 import { MemberDataExtendedDto } from 'member/dto/member-data.dto';
 import { memberSelect, memberSelectExtended } from 'member/member.select';
 import { MembershipPdfService } from 'membership-pdf/membership-pdf.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { I18nService } from 'nestjs-i18n';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { PrismaService } from 'prisma/prisma.service';
 import { R2Service } from 'r2/r2.service';
 import { UAParser } from 'ua-parser-js';
@@ -25,9 +28,10 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly i18n: I18nService,
-    private readonly membershipPdfService: MembershipPdfService,
-    private readonly attendanceService: AttendanceService,
+    private readonly mailService: MailService,
     private readonly r2Service: R2Service,
+    private readonly membershipPdfService: MembershipPdfService,
+    private readonly config: ConfigService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -193,7 +197,13 @@ export class AdminService {
   async addMembershipCard(data: AddMembershipCardDto): Promise<HttpStatus.OK> {
     const member = await this.prisma.member.findUnique({
       where: { id: data.userId },
-      select: { id: true, membershipCardNumber: true },
+      select: {
+        id: true,
+        membershipCardNumber: true,
+        email: true,
+        firstName: true,
+        memberSince: true,
+      },
     });
     if (!member) {
       throw new NotFoundException('Member not found');
@@ -224,65 +234,72 @@ export class AdminService {
       },
     });
 
+    let pdfBuffer: Buffer;
+    try {
+      const _pdfBuffer = await this.membershipPdfService.generateMembershipPdf(
+        member.id,
+      ); // Uint8Array
+      pdfBuffer = Buffer.from(_pdfBuffer);
+    } catch (err) {
+      this.logger.error(
+        `Error generating membership card PDF for member ${member.id}:`,
+      );
+      this.logger.error(err);
+
+      // remove membership card from member
+      await this.prisma.member.update({
+        where: { id: member.id },
+        data: {
+          membershipCard: {
+            disconnect: true,
+          },
+          // keep original memberSince date (if any)
+          memberSince: member.memberSince,
+        },
+      });
+
+      throw new BadRequestException(
+        'Error generating membership card PDF, membership card not assigned',
+      );
+    }
+
+    this.mailService
+      .sendEmail(
+        { email: member.email, name: member.firstName },
+        'Assegnazione tessera - Kinó Café',
+        await readFile(
+          join(process.cwd(), 'resources/emails/membership-card-assigned.ejs'),
+          {
+            encoding: 'utf-8',
+          },
+        ),
+        {
+          firstName: member.firstName,
+          number: data.membershipCardNumber.toString(),
+          downloadPdfUrl: `${this.config.get('FRONTEND_URL')}/v1/membership-pdf/${member.id}`,
+        },
+        [
+          {
+            ContentType: 'application/pdf',
+            Filename: `membership-card-${member.membershipCardNumber}.pdf`,
+            Base64Content: pdfBuffer.toString('base64'),
+          },
+        ],
+      )
+      .then(() => {
+        this.logger.info(
+          `Assigned membership card email sent to ${member.email}`,
+        );
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Error sending assigned membership card email to ${member.email}:`,
+        );
+        this.logger.error(error);
+        console.log(error); // just to make sure it shows up in the logs
+      });
+
     return HttpStatus.OK;
-  }
-
-  async generateMembershipPdf(
-    userId: number,
-  ): Promise<Uint8Array<ArrayBufferLike>> {
-    const member = await this.prisma.member.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-    if (!member) {
-      throw new BadRequestException(
-        'Member not found or member data incomplete',
-      );
-    }
-
-    const keys = [
-      'birthComune',
-      'streetName',
-      'streetNumber',
-      'postalCode',
-      'city',
-      'province',
-      'country',
-      'codiceFiscale',
-      'birthProvince',
-      'memberSince',
-      'membershipCardNumber',
-      'signatureR2Key',
-    ];
-    if (keys.some((e) => member[e] === null || member[e] === '')) {
-      this.logger.debug(
-        `Member data incomplete for member ${member.id}, cannot generate PDF`,
-      );
-      throw new BadRequestException(
-        'Member data incomplete, cannot generate PDF',
-      );
-    }
-
-    return this.membershipPdfService.generatePdf({
-      firstName: member.firstName!,
-      lastName: member.lastName!,
-      email: member.email!,
-      birthDate: member.birthDate!,
-      phoneNumber: member.phoneNumber!,
-      country: member.country!,
-      codiceFiscale: member.codiceFiscale!,
-      birthProvince: member.birthProvince!,
-      memberSince: member.memberSince!,
-      membershipCardNumber: member.membershipCardNumber!,
-      birthComune: member.birthComune!,
-      streetName: member.streetName!,
-      streetNumber: member.streetNumber!,
-      postalCode: member.postalCode!,
-      city: member.city!,
-      province: member.province!,
-      signatureR2Key: member.signatureR2Key,
-    });
   }
 
   async getSignature(signatureR2Key: string) {
