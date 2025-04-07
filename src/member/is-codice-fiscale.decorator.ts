@@ -1,13 +1,13 @@
+import { Inject } from '@nestjs/common';
 import {
   registerDecorator,
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import CodiceFiscale from 'codice-fiscale-js';
-import { Logger } from 'winston';
-import { Inject } from '@nestjs/common';
+import { isValidFiscalCode } from 'codice-fiscale-ts';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 @ValidatorConstraint({ name: 'isCodiceFiscale', async: false })
 export class IsCodiceFiscaleConstraint implements ValidatorConstraintInterface {
@@ -19,19 +19,7 @@ export class IsCodiceFiscaleConstraint implements ValidatorConstraintInterface {
       return false;
     }
 
-    try {
-      const data = new CodiceFiscale(value);
-      if (!data.isValid()) {
-        throw new Error('Invalid Codice Fiscale (isValid() returned false)');
-      }
-      this.logger.debug(`Codice Fiscale "${value}" is valid`);
-      return true;
-    } catch (error) {
-      this.logger.debug(
-        `Codice Fiscale "${value}" is invalid: ${error.message}`,
-      );
-      return false;
-    }
+    return isValidFiscalCode(value);
   }
 
   defaultMessage(): string {

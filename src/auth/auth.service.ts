@@ -10,7 +10,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
-import CodiceFiscale from 'codice-fiscale-js';
+import { decodeFiscalCode, type FiscalCodeData } from 'codice-fiscale-ts';
 import { addMinutes, format, formatDate, isBefore } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { IstatService } from 'istat/istat.service';
@@ -266,22 +266,26 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(data.password, 12);
 
-    let cfData: ReturnType<typeof CodiceFiscale.computeInverse> | undefined;
+    let cfData: FiscalCodeData | undefined;
     try {
       cfData =
-        data.codiceFiscale && CodiceFiscale.computeInverse(data.codiceFiscale);
+        data.codiceFiscale && (await decodeFiscalCode(data.codiceFiscale));
     } catch (err) {
       this.logger.debug(`Failed to compute inverse CF: ${err}`);
     }
-    const comuneName: string | null = data.birthComune || cfData?.birthplace;
-    const comuneData =
-      comuneName && (await this.istatService.getComuneData(comuneName));
 
     const { id, email } = await this.prisma.member.create({
       data: {
         ...data,
-        birthComune: comuneData?.nome || data.birthComune,
-        birthProvince: comuneData?.provincia.sigla || data.birthProvince,
+        birthComune:
+          cfData.foreignCountry !== 'IT'
+            ? null
+            : cfData.birthPlace || data.birthComune,
+        birthProvince:
+          cfData.foreignCountry !== 'IT'
+            ? null
+            : cfData.birthProvince || data.birthProvince,
+        birthCountry: cfData.foreignCountry || data.birthCountry,
         password: hashedPassword,
         signatureR2Key,
       },
