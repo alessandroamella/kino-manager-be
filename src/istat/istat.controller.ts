@@ -5,6 +5,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { ComuneDtoShort } from './dto/comune.dto';
 import { IstatService } from './istat.service';
 
 @ApiTags('istat')
@@ -14,7 +15,7 @@ export class IstatController {
 
   @Get('comune')
   @ApiOperation({ summary: 'Get Italian Comuni' })
-  @ApiOkResponse({ description: 'Comuni', type: [String] })
+  @ApiOkResponse({ description: 'Comuni', type: [ComuneDtoShort] })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
   async getComuni(@Query('q') q?: string) {
     return this.istatService.getComuni(q);

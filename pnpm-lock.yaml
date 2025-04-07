@@ -72,8 +72,8 @@ importers:
         specifier: ^0.14.1
         version: 0.14.1
       codice-fiscale-ts:
-        specifier: ^1.3.0
-        version: 1.3.0
+        specifier: ^1.3.1
+        version: 1.3.1
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -2147,8 +2147,8 @@ packages:
     resolution: {integrity: sha512-QVb0dM5HvG+uaxitm8wONl7jltx8dqhfU33DcqtOZcLSVIKSDDLDi7+0LbAKiyI8hD9u42m2YxXSkMGWThaecQ==}
     engines: {iojs: '>= 1.0.0', node: '>= 0.12.0'}
 
-  codice-fiscale-ts@1.3.0:
-    resolution: {integrity: sha512-jDmv7WriI3Eb6AIC8Nizi0SEHx9cD20pFVFwLHU4W8tc3WIkhsUz4Sc2CQ8vRi7fMQ1MvNtiGmgJumwpsrlzZg==}
+  codice-fiscale-ts@1.3.1:
+    resolution: {integrity: sha512-VcN1GWqys8gS52WRxf2zBw5hPFQToVLEKUSKNjxpk4qS2P8MlktA9LpOmeroBYJZUO1ynneB/vCoH50p73179g==}
     engines: {node: ^22.14.0, npm: ^10.9.2}
 
   collect-v8-coverage@1.0.2:
@@ -7073,7 +7073,7 @@ snapshots:
 
   co@4.6.0: {}
 
-  codice-fiscale-ts@1.3.0: {}
+  codice-fiscale-ts@1.3.1: {}
 
   collect-v8-coverage@1.0.2: {}
 
