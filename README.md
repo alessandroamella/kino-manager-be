@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> This repository has moved to the [kino-manager monorepo](https://github.com/alessandroamella/kino-manager/tree/master/apps/backend) and is archived.
+> Questo repository è stato spostato nel [monorepo kino-manager](https://github.com/alessandroamella/kino-manager/tree/master/apps/backend) ed è archiviato.
+
 # Kinó Café backend
 
 1. Crea un bucket Cloudflare R2 e usalo per settare le env `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`.
